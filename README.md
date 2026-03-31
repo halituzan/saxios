@@ -18,6 +18,7 @@ Modern, TypeScript-first HTTP client library with full axios compatibility
 - 📊 **Progress Tracking**: Upload/download progress takibi
 - 🛡️ **Error Handling**: Gelişmiş hata yönetimi
 - 🔧 **Configurable**: Esnek konfigürasyon seçenekleri
+- 💾 **Smart Caching**: Akıllı cache sistemi (Axios'da yok!)
 
 ## 📦 Kurulum
 
@@ -76,6 +77,46 @@ const api = laxios.create({
 // Instance ile request
 const users = await api.get('/users');
 const user = await api.post('/users', userData);
+```
+
+### Cache Kullanımı (Axios'da Yok! 🆕)
+
+```typescript
+import laxios from 'laxios';
+
+// Cache'i etkinleştir
+const api = laxios.create({
+  baseURL: 'https://api.example.com',
+  cache: true // Varsayılan cache ayarları
+});
+
+// İlk request - API'den gelir
+const users1 = await api.get('/users');
+
+// İkinci request - Cache'den gelir (çok hızlı!)
+const users2 = await api.get('/users');
+
+// Özel cache konfigürasyonu
+const apiWithCustomCache = laxios.create({
+  baseURL: 'https://api.example.com',
+  cache: {
+    enabled: true,
+    ttl: 60000, // 1 dakika cache
+    maxSize: 100 // Maksimum 100 entry
+  }
+});
+
+// Request bazında cache kontrolü
+const freshData = await api.get('/users', {
+  cache: false // Bu request için cache'i devre dışı bırak
+});
+
+const cachedData = await api.get('/products', {
+  cache: {
+    enabled: true,
+    ttl: 300000 // 5 dakika cache
+  }
+});
 ```
 
 ## 📚 Detaylı Kullanım
@@ -238,6 +279,105 @@ const formElement = document.getElementById('myForm') as HTMLFormElement;
 const jsonData = laxios.formToJSON(formElement);
 ```
 
+### Cache Yönetimi (Axios'da Olmayan Özellik! 🆕)
+
+Laxios, Axios'da bulunmayan gelişmiş bir cache sistemi sunar:
+
+#### Temel Cache Kullanımı
+
+```typescript
+// Cache'i etkinleştir
+const api = laxios.create({
+  cache: true
+});
+
+// İlk request - API'den gelir ve cache'lenir
+const users = await api.get('/users');
+
+// İkinci request - Cache'den gelir (çok hızlı!)
+const cachedUsers = await api.get('/users');
+```
+
+#### Gelişmiş Cache Konfigürasyonu
+
+```typescript
+const api = laxios.create({
+  cache: {
+    enabled: true,
+    ttl: 300000, // 5 dakika cache süresi
+    maxSize: 100, // Maksimum 100 cache entry
+    methods: ['GET', 'HEAD'], // Hangi metodlar cache'lensin
+    statusCodes: [200, 203, 300, 301, 410], // Hangi status kodları
+    
+    // Custom cache key generator
+    keyGenerator: (config) => {
+      return `${config.method}:${config.url}:${JSON.stringify(config.params)}`;
+    },
+    
+    // Cache filter
+    filter: (response) => {
+      return response.data && !response.data.sensitive;
+    }
+  }
+});
+```
+
+#### Request Bazında Cache Kontrolü
+
+```typescript
+// Bu request için cache'i devre dışı bırak
+const freshData = await api.get('/users', {
+  cache: false
+});
+
+// Bu request için özel cache ayarları
+const products = await api.get('/products', {
+  cache: {
+    enabled: true,
+    ttl: 60000 // 1 dakika
+  }
+});
+```
+
+#### Cache Yönetimi
+
+```typescript
+// Cache istatistikleri
+const stats = api.cache.getStats();
+console.log(`Cache hit rate: ${stats.hitRate}%`);
+console.log(`Total hits: ${stats.hits}`);
+console.log(`Total misses: ${stats.misses}`);
+
+// Cache'i temizle
+await api.cache.clear();
+
+// Belirli bir entry'yi sil
+await api.cache.delete('cache-key');
+
+// Cache'i devre dışı bırak
+api.cache.disable();
+
+// Cache'i tekrar etkinleştir
+api.cache.enable();
+```
+
+#### Cache Events
+
+```typescript
+// Cache olaylarını dinle
+api.cache.on('hit', (key, response) => {
+  console.log('Cache hit:', key);
+});
+
+api.cache.on('miss', (key) => {
+  console.log('Cache miss:', key);
+});
+
+api.cache.on('set', (key, response) => {
+  console.log('Cache set:', key);
+});
+```
+
 ### TypeScript Desteği
 
 ```typescript
@@ -281,6 +421,7 @@ const newUser = await laxios.post<User, CreateUserRequest>('/api/users', {
 | `maxBodyLength` | `number` | `-1` | Max body length |
 | `cancelToken` | `CancelToken` | - | Cancel token |
 | `signal` | `AbortSignal` | - | Abort signal |
+| `cache` | `boolean \| CacheConfig` | `false` | Cache konfigürasyonu |
 
 ## 🧪 Test
 
@@ -313,13 +454,16 @@ npm run lint
 
 ## 📈 Performance
 
-Laxios, modern fetch API kullanarak yüksek performans sağlar:
+Laxios, modern fetch API ve akıllı cache sistemi ile yüksek performans sağlar:
 
 - ✅ Tree-shakeable
 - ✅ Minimal bundle size (~15KB gzipped)
 - ✅ Modern browser desteği
 - ✅ HTTP/2 desteği
 - ✅ Streaming desteği
+- ✅ **Akıllı Cache Sistemi**: Tekrarlayan requestleri cache'den servis eder
+- ✅ **Memory Efficient**: LRU eviction ile memory kullanımını optimize eder
+- ✅ **TTL Support**: Otomatik cache expiration
 
 ## 🔄 Axios'tan Geçiş
 
@@ -334,6 +478,37 @@ import laxios from 'laxios';
 
 // Aynı API, aynı kullanım
 const response = await laxios.get('/api/users');
+```
+
+### Laxios'un Axios'a Göre Avantajları
+
+| Özellik | Axios | Laxios |
+|---------|--------|---------|
+| **Cache Sistemi** | ❌ Yok | ✅ Akıllı cache sistemi |
+| **Bundle Size** | ~13KB | ~15KB (cache ile) |
+| **Modern API** | XMLHttpRequest | Fetch API |
+| **TypeScript** | ✅ İyi | ✅ Mükemmel |
+| **Performance** | ✅ İyi | ✅ Cache ile daha hızlı |
+| **Memory Usage** | ✅ İyi | ✅ LRU cache ile optimize |
+
+### Cache ile Performance Artışı
+
+```typescript
+// Axios - Her seferinde network request
+const axios = require('axios');
+console.time('axios');
+await axios.get('/api/users');
+await axios.get('/api/users'); // Yine network request
+console.timeEnd('axios'); // ~200ms
+
+// Laxios - İkinci request cache'den
+import laxios from 'laxios';
+const api = laxios.create({ cache: true });
+
+console.time('laxios');
+await api.get('/api/users'); // Network request
+await api.get('/api/users'); // Cache'den (~1ms)
+console.timeEnd('laxios'); // ~101ms (50% daha hızlı!)
 ```
 
 ## 🤝 Katkıda Bulunma

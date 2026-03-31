@@ -147,6 +147,91 @@ async function cancelTokenExample() {
   }
 }
 
+// Cache örneği
+async function cacheExample() {
+  console.log('\n=== Cache Example ===');
+  
+  const api = laxios.create({
+    baseURL: 'https://jsonplaceholder.typicode.com',
+    cache: {
+      enabled: true,
+      ttl: 30000, // 30 saniye cache
+      maxSize: 50
+    }
+  });
+
+  try {
+    console.time('First request (cache miss)');
+    const response1 = await api.get('/posts/1');
+    console.timeEnd('First request (cache miss)');
+    console.log('First response title:', response1.data.title);
+
+    console.time('Second request (cache hit)');
+    const response2 = await api.get('/posts/1');
+    console.timeEnd('Second request (cache hit)');
+    console.log('Second response title:', response2.data.title);
+
+    // Cache istatistikleri
+    const stats = api.cache.getStats();
+    console.log('Cache Stats:', {
+      hits: stats.hits,
+      misses: stats.misses,
+      hitRate: `${stats.hitRate.toFixed(2)}%`,
+      size: stats.size
+    });
+
+    // Cache'i temizle
+    await api.cache.clear();
+    console.log('Cache cleared');
+
+  } catch (error) {
+    console.error('Cache example error:', error);
+  }
+}
+
+// Performance karşılaştırması
+async function performanceComparison() {
+  console.log('\n=== Performance Comparison ===');
+  
+  // Cache'siz instance
+  const noCacheApi = laxios.create({
+    baseURL: 'https://jsonplaceholder.typicode.com',
+    cache: false
+  });
+
+  // Cache'li instance
+  const cacheApi = laxios.create({
+    baseURL: 'https://jsonplaceholder.typicode.com',
+    cache: true
+  });
+
+  try {
+    // Cache'siz performans
+    console.time('No Cache - 3 requests');
+    await noCacheApi.get('/posts/1');
+    await noCacheApi.get('/posts/1');
+    await noCacheApi.get('/posts/1');
+    console.timeEnd('No Cache - 3 requests');
+
+    // Cache'li performans
+    console.time('With Cache - 3 requests');
+    await cacheApi.get('/posts/1'); // Cache miss
+    await cacheApi.get('/posts/1'); // Cache hit
+    await cacheApi.get('/posts/1'); // Cache hit
+    console.timeEnd('With Cache - 3 requests');
+
+    const stats = cacheApi.cache.getStats();
+    console.log('Cache performance:', {
+      totalRequests: stats.hits + stats.misses,
+      cacheHits: stats.hits,
+      hitRate: `${stats.hitRate.toFixed(2)}%`
+    });
+
+  } catch (error) {
+    console.error('Performance comparison error:', error);
+  }
+}
+
 // Tüm örnekleri çalıştır
 async function runExamples() {
   console.log('🚀 Laxios Examples Starting...\n');
@@ -156,6 +241,8 @@ async function runExamples() {
   await interceptorExample();
   await errorHandlingExample();
   await cancelTokenExample();
+  await cacheExample();
+  await performanceComparison();
   
   console.log('\n✅ All examples completed!');
 }
@@ -171,5 +258,7 @@ export {
   interceptorExample,
   errorHandlingExample,
   cancelTokenExample,
+  cacheExample,
+  performanceComparison,
   runExamples
 };

@@ -8,7 +8,8 @@ import {
 } from '../types';
 import { InterceptorManager, runInterceptors, runErrorInterceptors } from '../interceptors/InterceptorManager';
 import { createError, ERROR_CODES } from './LaxiosError';
-import fetchAdapter from '../adapters/fetch';
+import fetchAdapter, { setGlobalCacheManager } from '../adapters/fetch';
+import { CacheManager } from '../cache/CacheManager';
 import {
   mergeConfig,
   buildFullPath,
@@ -89,6 +90,7 @@ export class Laxios implements LaxiosInstance {
     request: InterceptorManager<LaxiosRequestConfig>;
     response: InterceptorManager<LaxiosResponse>;
   };
+  public cache: CacheManager;
 
   constructor(instanceConfig?: LaxiosRequestConfig) {
     this.defaults = {
@@ -112,6 +114,23 @@ export class Laxios implements LaxiosInstance {
       request: new InterceptorManager<LaxiosRequestConfig>(),
       response: new InterceptorManager<LaxiosResponse>()
     };
+
+    // Cache manager'ı başlat
+    const cacheConfig = instanceConfig?.cache;
+    if (cacheConfig) {
+      if (typeof cacheConfig === 'boolean' && cacheConfig) {
+        this.cache = new CacheManager({ enabled: true });
+      } else if (typeof cacheConfig === 'object') {
+        this.cache = new CacheManager({ ...cacheConfig, enabled: true });
+      } else {
+        this.cache = new CacheManager({ enabled: false });
+      }
+    } else {
+      this.cache = new CacheManager({ enabled: false });
+    }
+
+    // Global cache manager'ı ayarla
+    setGlobalCacheManager(this.cache);
   }
 
   /**

@@ -15,9 +15,28 @@ import {
   isArrayBufferView,
   createTimeoutPromise
 } from '../utils';
+import { CacheManager } from '../cache/CacheManager';
+import { createCacheKey, isCacheableResponse, parseCacheControlTTL } from '../cache/utils';
+
+// Global cache manager instance
+let globalCacheManager: CacheManager | null = null;
 
 /**
- * Fetch tabanlı HTTP adapter
+ * Global cache manager'ı ayarla
+ */
+export function setGlobalCacheManager(cacheManager: CacheManager): void {
+  globalCacheManager = cacheManager;
+}
+
+/**
+ * Global cache manager'ı al
+ */
+export function getGlobalCacheManager(): CacheManager | null {
+  return globalCacheManager;
+}
+
+/**
+ * Fetch tabanlı HTTP adapter (cache desteği ile)
  */
 export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): Promise<LaxiosResponse> => {
   return new Promise(async (resolve, reject) => {
@@ -42,8 +61,49 @@ export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): 
     } = config;
 
     try {
+      // Cache konfigürasyonunu al
+      let cacheManager: CacheManager | null = null;
+      let cacheConfig: any = null;
+      
+      if (config.cache) {
+        if (typeof config.cache === 'boolean' && config.cache) {
+          // Cache enabled, use global manager or create new one
+          cacheManager = globalCacheManager || new CacheManager({ enabled: true });
+        } else if (typeof config.cache === 'object') {
+          // Custom cache config
+          cacheConfig = config.cache;
+          cacheManager = globalCacheManager || new CacheManager({ ...cacheConfig, enabled: true });
+        }
+      } else if (globalCacheManager && globalCacheManager.isEnabled()) {
+        // Use global cache manager if available and enabled
+        cacheManager = globalCacheManager;
+      }
+
       // URL oluştur
       const fullURL = buildURL(url, params, paramsSerializer);
+      
+      // Cache key oluştur
+      let cacheKey: string | null = null;
+      if (cacheManager && cacheManager.isCacheable(config)) {
+        cacheKey = createCacheKey({ ...config, url: fullURL });
+        
+        // Cache'den kontrol et
+        const cachedResponse = await cacheManager.get(cacheKey);
+        if (cachedResponse) {
+          // Cache hit - cached response'u döndür
+          const response: LaxiosResponse = {
+            data: cachedResponse.data,
+            status: cachedResponse.status,
+            statusText: cachedResponse.statusText,
+            headers: cachedResponse.headers,
+            config: cachedResponse.config,
+            request: null
+          };
+          
+          resolve(response);
+          return;
+        }
+      }
 
       // AbortController oluştur
       const controller = new AbortController();
@@ -227,6 +287,19 @@ export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): 
 
       // Status validation
       if (validateStatus(response.status)) {
+        // Cache'e kaydet (eğer cache manager varsa ve cacheable ise)
+        if (cacheManager && cacheKey && isCacheableResponse(
+          response.status, 
+          responseHeaders, 
+          method
+        )) {
+          // Cache-Control header'ından TTL'yi parse et
+          const headerTtl = parseCacheControlTTL(responseHeaders);
+          const ttl = headerTtl || (cacheConfig?.ttl);
+          
+          await cacheManager.set(cacheKey, laxiosResponse, ttl);
+        }
+        
         resolve(laxiosResponse);
       } else {
         reject(createError(
