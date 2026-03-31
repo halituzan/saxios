@@ -1,0 +1,64 @@
+{
+  "name": "laxios",
+  "version": "1.0.0",
+  "description": "Modern, TypeScript-first HTTP client library with full axios compatibility",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "rollup -c rollup.config.mjs",
+    "dev": "rollup -c rollup.config.mjs -w",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "type-check": "tsc --noEmit",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run test && npm run build"
+  },
+  "keywords": [
+    "http",
+    "client",
+    "axios",
+    "request",
+    "typescript",
+    "promise",
+    "fetch",
+    "api"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/laxios.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/laxios/issues"
+  },
+  "homepage": "https://github.com/yourusername/laxios#readme",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^24.1.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-terser": "^0.4.0",
+    "@rollup/plugin-typescript": "^11.1.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^18.15.0",
+    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/parser": "^5.57.0",
+    "eslint": "^8.37.0",
+    "jest": "^29.5.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "rollup": "^3.20.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
