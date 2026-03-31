@@ -1,6 +1,9 @@
 // Cache imports
 export * from '../cache/types';
 
+// Feature imports
+export * from '../features/types';
+
 // HTTP Methods
 export type Method = 
   | 'GET' | 'get'
@@ -66,6 +69,8 @@ export interface LaxiosRequestConfig<D = any> {
   beforeRedirect?: (options: Record<string, any>, responseDetails: {headers: Record<string, string>}) => void;
   // Cache configuration
   cache?: boolean | any;
+  // Features configuration
+  features?: any;
 }
 
 // Response Interface
@@ -193,6 +198,7 @@ export interface LaxiosInstance extends Laxios {
     response: LaxiosInterceptorManager<LaxiosResponse>;
   };
   cache: any; // CacheManager type will be resolved at runtime
+  features: any; // FeatureManager type will be resolved at runtime
   
   getUri(config?: LaxiosRequestConfig): string;
   request<T = any, R = LaxiosResponse<T>, D = any>(config: LaxiosRequestConfig<D>): Promise<R>;

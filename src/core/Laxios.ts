@@ -10,6 +10,7 @@ import { InterceptorManager, runInterceptors, runErrorInterceptors } from '../in
 import { createError, ERROR_CODES } from './LaxiosError';
 import fetchAdapter, { setGlobalCacheManager } from '../adapters/fetch';
 import { CacheManager } from '../cache/CacheManager';
+import { FeatureManager } from '../features/FeatureManager';
 import {
   mergeConfig,
   buildFullPath,
@@ -91,6 +92,7 @@ export class Laxios implements LaxiosInstance {
     response: InterceptorManager<LaxiosResponse>;
   };
   public cache: CacheManager;
+  public features: FeatureManager;
 
   constructor(instanceConfig?: LaxiosRequestConfig) {
     this.defaults = {
@@ -131,6 +133,9 @@ export class Laxios implements LaxiosInstance {
 
     // Global cache manager'ı ayarla
     setGlobalCacheManager(this.cache);
+
+    // Feature manager'ı başlat
+    this.features = new FeatureManager(instanceConfig?.features);
   }
 
   /**
@@ -186,13 +191,13 @@ export class Laxios implements LaxiosInstance {
         });
       }
 
-      // Adapter ile request gönder
+      // Feature manager ile request'i process et
       const adapter = processedConfig.adapter || this.defaults.adapter;
       if (!adapter) {
         throw createError('No adapter available', ERROR_CODES.ERR_NOT_SUPPORT, processedConfig);
       }
 
-      let response = await adapter(processedConfig);
+      let response = await this.features.processRequest(processedConfig, () => adapter(processedConfig));
 
       // Response transformerları uygula
       if (response.data !== undefined && processedConfig.transformResponse) {

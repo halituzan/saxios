@@ -185,6 +185,7 @@ export {
 
 export * from './types';
 export * from './cache';
+export * from './features';
 
 // CommonJS compatibility
 module.exports = laxiosStatic;
