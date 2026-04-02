@@ -2,7 +2,7 @@ import { OfflineConfig, QueuedRequest } from '../types';
 import { SaxiosRequestConfig, SaxiosResponse } from '../../types';
 
 /**
- * Offline Manager - Offline support ve request queue
+ * Offline queue and reconnect sync (browser-oriented)
  */
 export class OfflineManager {
   private config: Required<OfflineConfig>;
@@ -26,24 +26,20 @@ export class OfflineManager {
   }
 
   /**
-   * Offline support başlat
+   * Wire storage, listeners, and persisted queue
    */
   private initOfflineSupport(): void {
-    // Storage'ı başlat
     this.initStorage();
 
-    // Network durumunu dinle
     this.setupNetworkListeners();
 
-    // Mevcut queue'yu yükle
     this.loadQueue();
 
-    // İlk network durumunu kontrol et
     this.checkNetworkStatus();
   }
 
   /**
-   * Storage'ı başlat
+   * Resolve Web Storage backend
    */
   private initStorage(): void {
     if (typeof window === 'undefined') return;
@@ -56,18 +52,16 @@ export class OfflineManager {
         this.storage = window.sessionStorage;
         break;
       case 'indexedDB':
-        // IndexedDB implementasyonu daha karmaşık olacak
         console.warn('IndexedDB storage not implemented yet, falling back to localStorage');
         this.storage = window.localStorage;
         break;
       case 'memory':
-        // Memory storage - sadece runtime'da kalır
         break;
     }
   }
 
   /**
-   * Network listener'ları kur
+   * Subscribe to online / offline events
    */
   private setupNetworkListeners(): void {
     if (typeof window === 'undefined') return;
@@ -82,7 +76,7 @@ export class OfflineManager {
   }
 
   /**
-   * Network durumunu kontrol et
+   * Read initial navigator.onLine
    */
   private checkNetworkStatus(): void {
     if (typeof navigator !== 'undefined') {
@@ -91,7 +85,7 @@ export class OfflineManager {
   }
 
   /**
-   * Online durumunu handle et
+   * Browser went online
    */
   private handleOnline(): void {
     this.isOnline = true;
@@ -102,14 +96,14 @@ export class OfflineManager {
   }
 
   /**
-   * Offline durumunu handle et
+   * Browser went offline
    */
   private handleOffline(): void {
     this.isOnline = false;
   }
 
   /**
-   * Request'i offline durumda handle et
+   * Queue or execute depending on connectivity
    */
   async handleOfflineRequest(
     config: SaxiosRequestConfig,
@@ -119,12 +113,10 @@ export class OfflineManager {
       return requestFn();
     }
 
-    // Online ise normal request gönder
     if (this.isOnline) {
       try {
         return await requestFn();
       } catch (error: any) {
-        // Network error ise queue'ya ekle
         if (this.isNetworkError(error) && this.config.queueFailedRequests) {
           this.queueRequest(config);
           throw new Error('Request queued due to network error');
@@ -133,7 +125,6 @@ export class OfflineManager {
       }
     }
 
-    // Offline ise queue'ya ekle
     if (this.config.queueFailedRequests) {
       this.queueRequest(config);
       throw new Error('Request queued - device is offline');
@@ -143,12 +134,10 @@ export class OfflineManager {
   }
 
   /**
-   * Request'i queue'ya ekle
+   * Enqueue config for later replay
    */
   private queueRequest(config: SaxiosRequestConfig): void {
-    // Queue size kontrolü
     if (this.requestQueue.length >= this.config.maxQueueSize) {
-      // En eski request'i çıkar (FIFO)
       this.requestQueue.shift();
     }
 
@@ -163,7 +152,7 @@ export class OfflineManager {
   }
 
   /**
-   * Queue'daki request'leri sync et
+   * Replay queued items after reconnect
    */
   private async syncQueuedRequests(): Promise<void> {
     if (!this.config.retryQueuedRequests || this.requestQueue.length === 0) {
@@ -175,13 +164,10 @@ export class OfflineManager {
 
     for (const queuedRequest of requestsToRetry) {
       try {
-        // Request'i tekrar dene
         await this.retryQueuedRequest(queuedRequest);
       } catch (error) {
-        // Retry başarısız - tekrar queue'ya ekle
         queuedRequest.attempts++;
         
-        // Max attempt kontrolü
         if (queuedRequest.attempts < 3) {
           this.requestQueue.push(queuedRequest);
         }
@@ -192,16 +178,14 @@ export class OfflineManager {
   }
 
   /**
-   * Queue'daki request'i tekrar dene
+   * Stub replay — integrate with real HTTP client in production
    */
   private async retryQueuedRequest(queuedRequest: QueuedRequest): Promise<void> {
-    // Bu kısım gerçek implementasyonda fetch ile yapılacak
-    // Şimdilik mock response döndür
     console.log('Retrying queued request:', queuedRequest.config.url);
   }
 
   /**
-   * Network error kontrolü
+   * Heuristic network failure detection
    */
   private isNetworkError(error: any): boolean {
     return (
@@ -213,7 +197,7 @@ export class OfflineManager {
   }
 
   /**
-   * Queue'yu storage'a kaydet
+   * Persist queue JSON
    */
   private saveQueue(): void {
     if (!this.storage) return;
@@ -227,7 +211,7 @@ export class OfflineManager {
   }
 
   /**
-   * Queue'yu storage'dan yükle
+   * Hydrate queue from storage
    */
   private loadQueue(): void {
     if (!this.storage) return;
@@ -244,7 +228,7 @@ export class OfflineManager {
   }
 
   /**
-   * Queue'yu temizle
+   * Drop all queued items
    */
   clearQueue(): void {
     this.requestQueue = [];
@@ -252,7 +236,7 @@ export class OfflineManager {
   }
 
   /**
-   * Queue durumunu al
+   * Inspect queue and connectivity
    */
   getQueueStatus(): {
     size: number;
@@ -279,7 +263,7 @@ export class OfflineManager {
   }
 
   /**
-   * Konfigürasyonu güncelle
+   * Merge config and optionally init
    */
   updateConfig(newConfig: Partial<OfflineConfig>): void {
     const wasEnabled = this.config.enabled;
@@ -291,7 +275,7 @@ export class OfflineManager {
   }
 
   /**
-   * Offline support'ı etkinleştir
+   * Enable offline module
    */
   enable(): void {
     this.config.enabled = true;
@@ -299,7 +283,7 @@ export class OfflineManager {
   }
 
   /**
-   * Offline support'ı devre dışı bırak
+   * Disable module and clear queue
    */
   disable(): void {
     this.config.enabled = false;
@@ -307,7 +291,7 @@ export class OfflineManager {
   }
 
   /**
-   * Etkin mi kontrol et
+   * Whether offline handling is enabled
    */
   isEnabled(): boolean {
     return this.config.enabled;

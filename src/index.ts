@@ -12,31 +12,31 @@ import {
 import { isObject } from './utils';
 
 /**
- * saxios instance oluşturan fonksiyon
+ * Creates a saxios instance
  */
 function createInstance(defaultConfig?: SaxiosRequestConfig): SaxiosInstance {
   const context = new Saxios(defaultConfig);
   
-  // Callable instance oluştur
+  // Build callable instance
   const instance = function(configOrUrl: any, config?: any) {
     return context.request(configOrUrl, config);
   } as SaxiosInstance;
 
-  // Saxios prototype'ını kopyala
+  // Copy Saxios prototype
   Object.setPrototypeOf(instance, Saxios.prototype);
   
-  // Context'i instance'a kopyala
+  // Copy context onto instance
   Object.assign(instance, context);
 
   return instance;
 }
 
 /**
- * Default saxios instance (npm paket adı: saxios, küçük harf)
+ * Default saxios instance (npm package name: saxios, lowercase)
  */
 const saxios = createInstance();
 
-// Static metodları ekle
+// Attach static methods
 (saxios as any).Saxios = Saxios;
 (saxios as any).SaxiosError = SaxiosError;
 (saxios as any).Cancel = Cancel;
@@ -44,19 +44,19 @@ const saxios = createInstance();
 (saxios as any).VERSION = '2.0.0';
 
 /**
- * Yeni instance oluştur
+ * Create a new instance
  */
 (saxios as any).create = function create(instanceConfig?: SaxiosRequestConfig): SaxiosInstance {
   return createInstance(instanceConfig);
 };
 
 /**
- * Cancel kontrolü
+ * Whether the value is a cancel
  */
 (saxios as any).isCancel = isCancel;
 
 /**
- * SaxiosError kontrolü
+ * Whether the value is a SaxiosError
  */
 (saxios as any).isSaxiosError = isSaxiosError;
 
@@ -77,7 +77,7 @@ const saxios = createInstance();
 };
 
 /**
- * FormData'ya dönüştüren fonksiyon
+ * Converts a plain object to FormData
  */
 (saxios as any).toFormData = function toFormData(
   sourceObj: object,
@@ -131,7 +131,7 @@ const saxios = createInstance();
 };
 
 /**
- * Form'u JSON'a dönüştüren fonksiyon
+ * Converts a form to a JSON object
  */
 (saxios as any).formToJSON = function formToJSON(form: GenericFormData | GenericHTMLFormElement): object {
   const result: any = {};

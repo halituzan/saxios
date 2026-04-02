@@ -2,7 +2,7 @@ import { RetryConfig } from '../types';
 import { SaxiosRequestConfig, SaxiosResponse, SaxiosError } from '../../types';
 
 /**
- * Retry Manager - Request'leri tekrar deneme sistemi
+ * Configurable retry wrapper for failed requests
  */
 export class RetryManager {
   private config: Required<RetryConfig>;
@@ -20,7 +20,7 @@ export class RetryManager {
   }
 
   /**
-   * Request'i retry logic ile çalıştır
+   * Execute request with retry / backoff
    */
   async executeWithRetry<T = any>(
     requestFn: () => Promise<SaxiosResponse<T>>,
@@ -41,12 +41,12 @@ export class RetryManager {
         lastError = error;
         attempt++;
 
-        // Son deneme ise hata fırlat
+        // Last attempt — will throw below
         if (attempt > this.config.attempts) {
           break;
         }
 
-        // Retry condition kontrolü
+        // User-defined retry predicate
         if (!this.config.retryCondition(error)) {
           break;
         }
@@ -54,7 +54,7 @@ export class RetryManager {
         // Retry callback
         this.config.onRetry(attempt, error);
 
-        // Delay hesapla ve bekle
+        // Wait before next attempt
         const delay = this.calculateDelay(attempt);
         await this.sleep(delay);
       }
@@ -64,7 +64,7 @@ export class RetryManager {
   }
 
   /**
-   * Retry delay hesapla
+   * Compute delay for attempt N
    */
   private calculateDelay(attempt: number): number {
     if (!this.config.exponentialBackoff) {
@@ -74,12 +74,12 @@ export class RetryManager {
     // Exponential backoff: delay * (2 ^ (attempt - 1))
     const exponentialDelay = this.config.delay * Math.pow(2, attempt - 1);
     
-    // Jitter ekle (randomness)
+    // Add jitter
     const jitter = Math.random() * 0.1 * exponentialDelay;
     
     const totalDelay = exponentialDelay + jitter;
     
-    // Max delay kontrolü
+    // Cap at maxDelay
     return Math.min(totalDelay, this.config.maxDelay);
   }
 
@@ -118,35 +118,35 @@ export class RetryManager {
   }
 
   /**
-   * Konfigürasyonu güncelle
+   * Merge partial config
    */
   updateConfig(newConfig: Partial<RetryConfig>): void {
     Object.assign(this.config, newConfig);
   }
 
   /**
-   * Konfigürasyonu al
+   * Current retry settings
    */
   getConfig(): RetryConfig {
     return { ...this.config };
   }
 
   /**
-   * Retry'ı etkinleştir
+   * Enable retries
    */
   enable(): void {
     this.config.enabled = true;
   }
 
   /**
-   * Retry'ı devre dışı bırak
+   * Disable retries
    */
   disable(): void {
     this.config.enabled = false;
   }
 
   /**
-   * Etkin mi kontrol et
+   * Whether retry is enabled
    */
   isEnabled(): boolean {
     return this.config.enabled;

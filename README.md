@@ -1,36 +1,39 @@
-# 🚀 saxios
+# saxios
 
-Modern, TypeScript-first HTTP client library with full axios compatibility
+Modern, TypeScript-first HTTP client with an axios-compatible API.
+
+**Languages:** [English](README.md) · [Türkçe / Turkish](README.tr.md)
 
 [![npm version](https://badge.fury.io/js/saxios.svg)](https://badge.fury.io/js/saxios)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Test Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](./coverage)
 
-## ✨ Özellikler
+## Features
 
-### 🎯 **Temel Özellikler**
-- 🎯 **Axios Uyumluluğu**: Axios ile %100 uyumlu API
-- 🔒 **TypeScript First**: Tam TypeScript desteği ve tip güvenliği
-- 🌐 **Modern Fetch API**: Altında modern fetch API kullanır
-- ⚡ **Hafif ve Hızlı**: Minimal bağımlılık, maksimum performans
-- 🔄 **Interceptors**: Request ve response interceptor desteği
-- ❌ **Cancel Support**: Request iptal etme desteği
-- 📊 **Progress Tracking**: Upload/download progress takibi
-- 🛡️ **Error Handling**: Gelişmiş hata yönetimi
+### Core
 
-### 🚀 **Gelişmiş Özellikler (Axios'da Yok!)**
-- 💾 **Smart Caching**: Akıllı cache sistemi
-- 🔄 **Auto Retry**: Akıllı retry mekanizması
-- 🎯 **Request Deduplication**: Aynı request'leri birleştirme
-- 📊 **Built-in Analytics**: Performance ve error tracking
-- 🔒 **Advanced Security**: CSRF, request signing, encryption
-- 🌐 **Offline Support**: Offline çalışma ve sync
-- ⚡ **Request Batching**: Multiple request'leri optimize etme
-- 📝 **Advanced Logging**: Detaylı logging ve debugging
-- 🎛️ **Feature Pipeline**: Modüler özellik sistemi
+- **Axios-compatible API**: Familiar surface for existing axios code
+- **TypeScript-first**: Strong typing across requests and responses
+- **Fetch-based**: Uses the native Fetch API under the hood
+- **Lightweight**: Small dependency footprint
+- **Interceptors**: Request and response interceptors
+- **Cancellation**: `CancelToken` and `AbortSignal` support
+- **Progress hooks**: Upload / download progress callbacks (where the environment allows)
+- **Errors**: Structured `SaxiosError` handling
 
-## 📦 Kurulum
+### Beyond axios (optional modules)
+
+- **Caching**: Pluggable cache with TTL and LRU eviction
+- **Auto retry**: Configurable retries and backoff
+- **Request deduplication**: Coalesce identical in-flight calls
+- **Analytics hooks**: Collect timing and error metrics
+- **Security helpers**: CSRF, signing hooks, redaction (see implementation notes in source)
+- **Offline queue**: Browser-oriented queue / reconnect sync (experimental)
+- **Batching**: Group compatible GETs (experimental)
+- **Logging**: Verbose request/response logging with redaction
+
+## Installation
 
 ```bash
 npm install saxios
@@ -44,33 +47,29 @@ yarn add saxios
 pnpm add saxios
 ```
 
-## 🚀 Hızlı Başlangıç
+## Quick start
 
-### Temel Kullanım
+### Basic usage
 
 ```typescript
 import saxios from 'saxios';
 
-// GET request
 const response = await saxios.get('https://api.example.com/users');
 console.log(response.data);
 
-// POST request
 const newUser = await saxios.post('https://api.example.com/users', {
   name: 'John Doe',
   email: 'john@example.com'
 });
 
-// PUT request
 const updatedUser = await saxios.put('https://api.example.com/users/1', {
   name: 'Jane Doe'
 });
 
-// DELETE request
 await saxios.delete('https://api.example.com/users/1');
 ```
 
-### Instance Oluşturma
+### Creating an instance
 
 ```typescript
 import saxios from 'saxios';
@@ -79,59 +78,50 @@ const api = saxios.create({
   baseURL: 'https://api.example.com',
   timeout: 5000,
   headers: {
-    'Authorization': 'Bearer your-token',
+    Authorization: 'Bearer your-token',
     'Content-Type': 'application/json'
   }
 });
 
-// Instance ile request
 const users = await api.get('/users');
 const user = await api.post('/users', userData);
 ```
 
-### Cache Kullanımı (Axios'da Yok! 🆕)
+### Caching (saxios extension)
 
 ```typescript
 import saxios from 'saxios';
 
-// Cache'i etkinleştir
 const api = saxios.create({
   baseURL: 'https://api.example.com',
-  cache: true // Varsayılan cache ayarları
+  cache: true
 });
 
-// İlk request - API'den gelir
 const users1 = await api.get('/users');
+const users2 = await api.get('/users'); // served from cache when eligible
 
-// İkinci request - Cache'den gelir (çok hızlı!)
-const users2 = await api.get('/users');
-
-// Özel cache konfigürasyonu
 const apiWithCustomCache = saxios.create({
   baseURL: 'https://api.example.com',
   cache: {
     enabled: true,
-    ttl: 60000, // 1 dakika cache
-    maxSize: 100 // Maksimum 100 entry
+    ttl: 60000,
+    maxSize: 100
   }
 });
 
-// Request bazında cache kontrolü
-const freshData = await api.get('/users', {
-  cache: false // Bu request için cache'i devre dışı bırak
-});
+const freshData = await api.get('/users', { cache: false });
 
 const cachedData = await api.get('/products', {
   cache: {
     enabled: true,
-    ttl: 300000 // 5 dakika cache
+    ttl: 300000
   }
 });
 ```
 
-## 📚 Detaylı Kullanım
+## Detailed usage
 
-### Request Konfigürasyonu
+### Request configuration
 
 ```typescript
 const config = {
@@ -139,13 +129,10 @@ const config = {
   method: 'GET',
   baseURL: 'https://api.example.com',
   headers: {
-    'Authorization': 'Bearer token',
+    Authorization: 'Bearer token',
     'Content-Type': 'application/json'
   },
-  params: {
-    page: 1,
-    limit: 10
-  },
+  params: { page: 1, limit: 10 },
   timeout: 5000,
   withCredentials: true,
   responseType: 'json'
@@ -156,38 +143,25 @@ const response = await saxios.request(config);
 
 ### Interceptors
 
-#### Request Interceptors
+**Request**
 
 ```typescript
-// Request interceptor ekle
 saxios.interceptors.request.use(
   (config) => {
-    // Request gönderilmeden önce
     config.headers.Authorization = `Bearer ${getToken()}`;
-    console.log('Request gönderiliyor:', config);
     return config;
   },
-  (error) => {
-    // Request error
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 ```
 
-#### Response Interceptors
+**Response**
 
 ```typescript
-// Response interceptor ekle
 saxios.interceptors.response.use(
-  (response) => {
-    // Başarılı response
-    console.log('Response alındı:', response);
-    return response;
-  },
+  (response) => response,
   (error) => {
-    // Response error
     if (error.response?.status === 401) {
-      // Token expired, redirect to login
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -195,50 +169,45 @@ saxios.interceptors.response.use(
 );
 ```
 
-### Error Handling
+### Error handling
 
 ```typescript
 import { isSaxiosError } from 'saxios';
 
 try {
-  const response = await saxios.get('/api/users');
+  await saxios.get('/api/users');
 } catch (error) {
   if (isSaxiosError(error)) {
-    console.log('Status:', error.response?.status);
-    console.log('Data:', error.response?.data);
-    console.log('Headers:', error.response?.headers);
+    console.log(error.response?.status, error.response?.data);
   } else {
-    console.log('Network error:', error.message);
+    console.log('Network error:', (error as Error).message);
   }
 }
 ```
 
-### Cancel Token
+### CancelToken
 
 ```typescript
 import { CancelToken } from 'saxios';
 
-// Cancel token oluştur
 const source = CancelToken.source();
 
-// Request gönder
 const request = saxios.get('/api/data', {
   cancelToken: source.token
 });
 
-// Request'i iptal et
-source.cancel('İşlem kullanıcı tarafından iptal edildi');
+source.cancel('Operation cancelled by user');
 
 try {
-  const response = await request;
+  await request;
 } catch (error) {
   if (saxios.isCancel(error)) {
-    console.log('Request iptal edildi:', error.message);
+    console.log('Cancelled:', error.message);
   }
 }
 ```
 
-### AbortSignal ile Cancel
+### AbortSignal
 
 ```typescript
 const controller = new AbortController();
@@ -247,148 +216,71 @@ const request = saxios.get('/api/data', {
   signal: controller.signal
 });
 
-// 5 saniye sonra iptal et
-setTimeout(() => {
-  controller.abort();
-}, 5000);
+setTimeout(() => controller.abort(), 5000);
 ```
 
-### Progress Tracking
+### Progress
 
 ```typescript
-const response = await saxios.post('/api/upload', formData, {
-  onUploadProgress: (progressEvent) => {
-    const percentCompleted = Math.round(
-      (progressEvent.loaded * 100) / (progressEvent.total || 1)
-    );
-    console.log(`Upload: ${percentCompleted}%`);
+await saxios.post('/api/upload', formData, {
+  onUploadProgress: (e) => {
+    const pct = Math.round((e.loaded * 100) / (e.total || 1));
+    console.log(`Upload: ${pct}%`);
   },
-  onDownloadProgress: (progressEvent) => {
-    const percentCompleted = Math.round(
-      (progressEvent.loaded * 100) / (progressEvent.total || 1)
-    );
-    console.log(`Download: ${percentCompleted}%`);
+  onDownloadProgress: (e) => {
+    const pct = Math.round((e.loaded * 100) / (e.total || 1));
+    console.log(`Download: ${pct}%`);
   }
 });
 ```
 
-### Form Data
+### Form data helpers
 
 ```typescript
-// Object'i FormData'ya dönüştür
 const formData = saxios.toFormData({
   name: 'John',
   file: fileInput.files[0],
   tags: ['tag1', 'tag2']
 });
 
-const response = await saxios.post('/api/upload', formData);
+await saxios.post('/api/upload', formData);
 
-// Form element'ini JSON'a dönüştür
 const formElement = document.getElementById('myForm') as HTMLFormElement;
 const jsonData = saxios.formToJSON(formElement);
 ```
 
-### Cache Yönetimi (Axios'da Olmayan Özellik! 🆕)
-
-saxios, Axios'da bulunmayan gelişmiş bir cache sistemi sunar:
-
-#### Temel Cache Kullanımı
+### Cache API
 
 ```typescript
-// Cache'i etkinleştir
-const api = saxios.create({
-  cache: true
-});
+const api = saxios.create({ cache: true });
 
-// İlk request - API'den gelir ve cache'lenir
-const users = await api.get('/users');
+await api.get('/users');
+await api.get('/users');
 
-// İkinci request - Cache'den gelir (çok hızlı!)
-const cachedUsers = await api.get('/users');
-```
-
-#### Gelişmiş Cache Konfigürasyonu
-
-```typescript
-const api = saxios.create({
+const api2 = saxios.create({
   cache: {
     enabled: true,
-    ttl: 300000, // 5 dakika cache süresi
-    maxSize: 100, // Maksimum 100 cache entry
-    methods: ['GET', 'HEAD'], // Hangi metodlar cache'lensin
-    statusCodes: [200, 203, 300, 301, 410], // Hangi status kodları
-    
-    // Custom cache key generator
-    keyGenerator: (config) => {
-      return `${config.method}:${config.url}:${JSON.stringify(config.params)}`;
-    },
-    
-    // Cache filter
-    filter: (response) => {
-      return response.data && !response.data.sensitive;
-    }
+    ttl: 300000,
+    maxSize: 100,
+    methods: ['GET', 'HEAD'],
+    statusCodes: [200, 203, 300, 301, 410],
+    keyGenerator: (config) =>
+      `${config.method}:${config.url}:${JSON.stringify(config.params)}`,
+    filter: (response) => Boolean(response.data && !response.data.sensitive)
   }
 });
-```
 
-#### Request Bazında Cache Kontrolü
-
-```typescript
-// Bu request için cache'i devre dışı bırak
-const freshData = await api.get('/users', {
-  cache: false
-});
-
-// Bu request için özel cache ayarları
-const products = await api.get('/products', {
-  cache: {
-    enabled: true,
-    ttl: 60000 // 1 dakika
-  }
-});
-```
-
-#### Cache Yönetimi
-
-```typescript
-// Cache istatistikleri
 const stats = api.cache.getStats();
-console.log(`Cache hit rate: ${stats.hitRate}%`);
-console.log(`Total hits: ${stats.hits}`);
-console.log(`Total misses: ${stats.misses}`);
-
-// Cache'i temizle
 await api.cache.clear();
-
-// Belirli bir entry'yi sil
 await api.cache.delete('cache-key');
-
-// Cache'i devre dışı bırak
 api.cache.disable();
-
-// Cache'i tekrar etkinleştir
 api.cache.enable();
+
+api.cache.on('hit', (key) => console.log('hit', key));
+api.cache.on('miss', (key) => console.log('miss', key));
 ```
 
-#### Cache Events
-
-```typescript
-// Cache olaylarını dinle
-api.cache.on('hit', (key, response) => {
-  console.log('Cache hit:', key);
-});
-
-api.cache.on('miss', (key) => {
-  console.log('Cache miss:', key);
-});
-
-api.cache.on('set', (key, response) => {
-  console.log('Cache set:', key);
-});
-```
-
-### TypeScript Desteği
+### TypeScript
 
 ```typescript
 interface User {
@@ -402,114 +294,84 @@ interface CreateUserRequest {
   email: string;
 }
 
-// Tip güvenli request
-const response = await saxios.get<User[]>('/api/users');
-const users: User[] = response.data;
+const res = await saxios.get<User[]>('/api/users');
+const users: User[] = res.data;
 
-// Tip güvenli POST
-const newUser = await saxios.post<User, CreateUserRequest>('/api/users', {
+const created = await saxios.post<User, CreateUserRequest>('/api/users', {
   name: 'John',
   email: 'john@example.com'
 });
 ```
 
-## 🔧 Konfigürasyon Seçenekleri
+## Configuration reference
 
-| Seçenek | Tip | Varsayılan | Açıklama |
-|---------|-----|------------|----------|
-| `url` | `string` | - | Request URL'i |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `url` | `string` | — | Request URL |
 | `method` | `Method` | `'GET'` | HTTP method |
-| `baseURL` | `string` | - | Base URL |
+| `baseURL` | `string` | — | Base URL |
 | `headers` | `object` | `{}` | Request headers |
-| `params` | `object` | - | URL parametreleri |
-| `data` | `any` | - | Request body |
-| `timeout` | `number` | `0` | Timeout (ms) |
-| `withCredentials` | `boolean` | `false` | Credentials gönder |
-| `responseType` | `ResponseType` | `'json'` | Response tipi |
-| `validateStatus` | `function` | `status => status >= 200 && status < 300` | Status validator |
-| `maxContentLength` | `number` | `-1` | Max content length |
-| `maxBodyLength` | `number` | `-1` | Max body length |
-| `cancelToken` | `CancelToken` | - | Cancel token |
-| `signal` | `AbortSignal` | - | Abort signal |
-| `cache` | `boolean \| CacheConfig` | `false` | Cache konfigürasyonu |
+| `params` | `object` | — | Query parameters |
+| `data` | `any` | — | Request body |
+| `timeout` | `number` | `0` | Timeout (ms), `0` = none |
+| `withCredentials` | `boolean` | `false` | Send cookies |
+| `responseType` | `ResponseType` | `'json'` | How to parse the body |
+| `validateStatus` | `function` | `status >= 200 && status < 300` | Treat as success |
+| `maxContentLength` | `number` | `-1` | Response size limit |
+| `maxBodyLength` | `number` | `-1` | Request body size limit |
+| `cancelToken` | `CancelToken` | — | Legacy cancel API |
+| `signal` | `AbortSignal` | — | AbortController signal |
+| `cache` | `boolean \| CacheConfig` | `false` | Cache options |
 
-## 🧪 Test
+## Scripts
 
 ```bash
-# Testleri çalıştır
 npm test
-
-# Test coverage
 npm run test:coverage
-
-# Watch mode
 npm run test:watch
-```
-
-## 🏗️ Build
-
-```bash
-# Build
 npm run build
-
-# Development build (watch mode)
 npm run dev
-
-# Type check
 npm run type-check
-
-# Lint
 npm run lint
 ```
 
-## 📈 Performance
+## Performance
 
-saxios, modern fetch API ve akıllı cache sistemi ile yüksek performans sağlar:
+- Tree-shakeable ESM/CJS builds
+- Small gzipped footprint (varies with features enabled)
+- Fetch and HTTP/2 where the runtime supports them
+- Optional cache reduces duplicate traffic; LRU bounds memory use
 
-- ✅ Tree-shakeable
-- ✅ Minimal bundle size (~15KB gzipped)
-- ✅ Modern browser desteği
-- ✅ HTTP/2 desteği
-- ✅ Streaming desteği
-- ✅ **Akıllı Cache Sistemi**: Tekrarlayan requestleri cache'den servis eder
-- ✅ **Memory Efficient**: LRU eviction ile memory kullanımını optimize eder
-- ✅ **TTL Support**: Otomatik cache expiration
+## Migrating from axios
 
-## 🔄 Axios'tan Geçiş
-
-saxios, Axios ile %100 uyumlu API sunar. Mevcut Axios kodunuz minimal değişiklikle çalışacaktır:
+Change the import; the call shape stays the same:
 
 ```typescript
-// Axios
+// Before
 import axios from 'axios';
 
-// saxios - sadece import değiştirin
+// After
 import saxios from 'saxios';
 
-// Aynı API, aynı kullanım
+// Optional: keep the name `axios`
+import { default as axios } from 'saxios';
+
 const response = await saxios.get('/api/users');
 ```
 
-### saxios'un Axios'a Göre Avantajları
+### Comparison (illustrative)
 
-| Özellik | Axios | saxios v2.0 |
-|---------|--------|-------------|
-| **Cache Sistemi** | ❌ Yok | ✅ Akıllı cache sistemi |
-| **Auto Retry** | ❌ Manuel | ✅ Akıllı retry mekanizması |
-| **Request Deduplication** | ❌ Yok | ✅ Otomatik deduplication |
-| **Built-in Analytics** | ❌ Yok | ✅ Performance tracking |
-| **Advanced Security** | ❌ Temel | ✅ CSRF, signing, encryption |
-| **Offline Support** | ❌ Yok | ✅ Queue ve sync |
-| **Request Batching** | ❌ Yok | ✅ Otomatik batching |
-| **Advanced Logging** | ❌ Temel | ✅ Detaylı logging |
-| **Bundle Size** | ~13KB | ~25KB (tüm features ile) |
-| **Modern API** | XMLHttpRequest | Fetch API |
-| **TypeScript** | ✅ İyi | ✅ Mükemmel |
-| **Performance** | ✅ İyi | ✅ 2-3x daha hızlı |
+| Area | axios | saxios |
+|------|-------|--------|
+| Cache | — | Built-in (opt-in) |
+| Retry / dedup / analytics | DIY | Optional feature flags |
+| Transport | XHR (classic axios) | Fetch |
+| Bundle | Depends on build | Depends on features enabled |
 
-## 🚀 **Gelişmiş Özellikler Kullanımı**
+## Optional feature modules
 
-### 🔄 **Auto Retry System**
+### Retry
+
 ```typescript
 const api = saxios.create({
   features: {
@@ -522,31 +384,29 @@ const api = saxios.create({
     }
   }
 });
-
-// Network hatalarında otomatik 3 kez dener
-const data = await api.get('/api/users');
 ```
 
-### 🎯 **Request Deduplication**
+### Deduplication
+
 ```typescript
 const api = saxios.create({
   features: {
     deduplication: {
       enabled: true,
-      ttl: 60000 // 1 dakika
+      ttl: 60000
     }
   }
 });
 
-// Aynı anda aynı request'ler tek seferde gönderilir
-Promise.all([
+await Promise.all([
   api.get('/api/users'),
   api.get('/api/users'),
   api.get('/api/users')
-]); // Sadece 1 network request!
+]);
 ```
 
-### 📊 **Built-in Analytics**
+### Analytics
+
 ```typescript
 const api = saxios.create({
   features: {
@@ -558,13 +418,11 @@ const api = saxios.create({
   }
 });
 
-// Analytics verilerini al
 const stats = api.features.analytics.getAnalytics();
-console.log(`Average response time: ${stats.averageResponseTime}ms`);
-console.log(`Error rate: ${stats.errorRate}%`);
 ```
 
-### 🔒 **Advanced Security**
+### Security (demo-level helpers — review before production)
+
 ```typescript
 const api = saxios.create({
   features: {
@@ -576,12 +434,10 @@ const api = saxios.create({
     }
   }
 });
-
-// Otomatik CSRF token ve request signing
-await api.post('/api/login', { username, password });
 ```
 
-### 🌐 **Offline Support**
+### Offline
+
 ```typescript
 const api = saxios.create({
   features: {
@@ -592,13 +448,10 @@ const api = saxios.create({
     }
   }
 });
-
-// Offline'da request'ler queue'ya eklenir
-// Online olunca otomatik sync edilir
-await api.post('/api/data', { info: 'test' });
 ```
 
-### ⚡ **Request Batching**
+### Batching
+
 ```typescript
 const api = saxios.create({
   features: {
@@ -609,14 +462,10 @@ const api = saxios.create({
     }
   }
 });
-
-// Birden fazla GET request otomatik batch'lenir
-api.get('/api/users/1');
-api.get('/api/users/2');
-api.get('/api/users/3'); // Tek batch request olarak gönderilir
 ```
 
-### 📝 **Advanced Logging**
+### Logging
+
 ```typescript
 const api = saxios.create({
   features: {
@@ -629,55 +478,28 @@ const api = saxios.create({
   }
 });
 
-// Tüm request'ler otomatik loglanır
-// Log history'yi al
 const logs = api.features.logging.getLogs();
 ```
 
-### Cache ile Performance Artışı
+## Contributing
 
-```typescript
-// Axios - Her seferinde network request
-const axios = require('axios');
-console.time('axios');
-await axios.get('/api/users');
-await axios.get('/api/users'); // Yine network request
-console.timeEnd('axios'); // ~200ms
+1. Fork the repository
+2. Create a branch (`git checkout -b feature/your-feature`)
+3. Commit your changes
+4. Push and open a pull request
 
-// saxios - İkinci request cache'den
-import saxios from 'saxios';
-const api = saxios.create({ cache: true });
+## License
 
-console.time('saxios');
-await api.get('/api/users'); // Network request
-await api.get('/api/users'); // Cache'den (~1ms)
-console.timeEnd('saxios'); // ~101ms (50% daha hızlı!)
-```
+MIT — see [LICENSE](LICENSE).
 
-## 🤝 Katkıda Bulunma
+## Acknowledgements
 
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'feat: add amazing feature'`)
-4. Branch'i push edin (`git push origin feature/amazing-feature`)
-5. Pull Request oluşturun
+- [axios](https://github.com/axios/axios)
+- [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
 
-## 📄 Lisans
+## Support
 
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
+- [Issues](https://github.com/yourusername/saxios/issues)
+- [Discussions](https://github.com/yourusername/saxios/discussions)
 
-## 🙏 Teşekkürler
-
-- [Axios](https://github.com/axios/axios) - İlham kaynağı
-- [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) - Altyapı
-- Tüm katkıda bulunanlar
-
-## 📞 Destek
-
-- 🐛 [Issues](https://github.com/yourusername/saxios/issues)
-- 💬 [Discussions](https://github.com/yourusername/saxios/discussions)
-- 📧 Email: support@saxios.dev
-
----
-
-**saxios ile modern HTTP client deneyimini yaşayın! 🚀**
+Replace `yourusername` in URLs with your GitHub org or username before publishing.

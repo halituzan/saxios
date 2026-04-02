@@ -3,7 +3,7 @@ import { CacheConfig, CachedResponse, CacheStorage, CacheStats, CacheEvents } fr
 import { MemoryStorage } from './MemoryStorage';
 
 /**
- * Cache Manager sınıfı
+ * Cache manager
  */
 export class CacheManager {
   private config: Required<CacheConfig>;
@@ -14,7 +14,7 @@ export class CacheManager {
   constructor(config: CacheConfig = {}) {
     this.config = {
       enabled: config.enabled ?? false,
-      ttl: config.ttl ?? 300000, // 5 dakika
+      ttl: config.ttl ?? 300000, // 5 minutes
       maxSize: config.maxSize ?? 100,
       storage: config.storage ?? new MemoryStorage(config.maxSize ?? 100),
       keyGenerator: config.keyGenerator ?? this.defaultKeyGenerator,
@@ -37,28 +37,28 @@ export class CacheManager {
   }
 
   /**
-   * Cache'i etkinleştir
+   * Enable caching
    */
   enable(): void {
     this.config.enabled = true;
   }
 
   /**
-   * Cache'i devre dışı bırak
+   * Disable caching
    */
   disable(): void {
     this.config.enabled = false;
   }
 
   /**
-   * Cache'in etkin olup olmadığını kontrol et
+   * Whether caching is enabled
    */
   isEnabled(): boolean {
     return this.config.enabled;
   }
 
   /**
-   * Request'in cache'lenebilir olup olmadığını kontrol et
+   * Whether the request may use cache
    */
   isCacheable(config: SaxiosRequestConfig): boolean {
     if (!this.config.enabled) return false;
@@ -68,7 +68,7 @@ export class CacheManager {
   }
 
   /**
-   * Response'un cache'lenebilir olup olmadığını kontrol et
+   * Whether the response may be stored
    */
   isCacheableResponse(response: SaxiosResponse): boolean {
     if (!this.config.enabled) return false;
@@ -80,7 +80,7 @@ export class CacheManager {
   }
 
   /**
-   * Cache key oluştur
+   * Build cache key
    */
   generateKey(config: SaxiosRequestConfig): string {
     return this.config.keyGenerator(config);
@@ -99,7 +99,7 @@ export class CacheManager {
   }
 
   /**
-   * Cache'den response al
+   * Read cached response
    */
   async get(key: string): Promise<CachedResponse | null> {
     try {
@@ -124,7 +124,7 @@ export class CacheManager {
   }
 
   /**
-   * Response'u cache'e kaydet
+   * Store a response in cache
    */
   async set(key: string, response: SaxiosResponse, ttl?: number): Promise<void> {
     if (!this.isCacheableResponse(response)) {
@@ -150,12 +150,12 @@ export class CacheManager {
       this.emit('set', key, cachedResponse);
       this.updateStats();
     } catch (error) {
-      // Cache set hatası - sessizce devam et
+      // Ignore cache set errors
     }
   }
 
   /**
-   * Cache'den entry sil
+   * Remove an entry
    */
   async delete(key: string): Promise<void> {
     try {
@@ -164,12 +164,12 @@ export class CacheManager {
       this.emit('delete', key);
       this.updateStats();
     } catch (error) {
-      // Silme hatası - sessizce devam et
+      // Ignore delete errors
     }
   }
 
   /**
-   * Tüm cache'i temizle
+   * Clear all entries
    */
   async clear(): Promise<void> {
     try {
@@ -184,12 +184,12 @@ export class CacheManager {
       };
       this.emit('clear');
     } catch (error) {
-      // Temizleme hatası - sessizce devam et
+      // Ignore clear errors
     }
   }
 
   /**
-   * Cache'de key var mı kontrol et
+   * Whether a key exists
    */
   async has(key: string): Promise<boolean> {
     try {
@@ -200,42 +200,42 @@ export class CacheManager {
   }
 
   /**
-   * Cache istatistiklerini al
+   * Snapshot of cache statistics
    */
   getStats(): CacheStats {
     return { ...this.stats };
   }
 
   /**
-   * Cache konfigürasyonunu al
+   * Current configuration
    */
   getConfig(): CacheConfig {
     return { ...this.config };
   }
 
   /**
-   * Cache konfigürasyonunu güncelle
+   * Update configuration
    */
   updateConfig(newConfig: Partial<CacheConfig>): void {
     Object.assign(this.config, newConfig);
   }
 
   /**
-   * Event listener ekle
+   * Subscribe to cache events
    */
   on<K extends keyof CacheEvents>(event: K, listener: CacheEvents[K]): void {
     this.events[event] = listener;
   }
 
   /**
-   * Event listener kaldır
+   * Unsubscribe from an event
    */
   off<K extends keyof CacheEvents>(event: K): void {
     delete this.events[event];
   }
 
   /**
-   * Event emit et
+   * Emit a cache event
    */
   private emit<K extends keyof CacheEvents>(event: K, ...args: Parameters<CacheEvents[K]>): void {
     const listener = this.events[event];
@@ -245,20 +245,20 @@ export class CacheManager {
   }
 
   /**
-   * İstatistikleri güncelle
+   * Recompute derived stats
    */
   private updateStats(): void {
     const total = this.stats.hits + this.stats.misses;
     this.stats.hitRate = total > 0 ? (this.stats.hits / total) * 100 : 0;
     
-    // Storage size'ı güncelle (eğer mümkünse)
+    // Update storage size when available
     if (this.storage instanceof MemoryStorage) {
       this.stats.size = this.storage.size;
     }
   }
 
   /**
-   * Stale-while-revalidate stratejisi
+   * Stale-while-revalidate helper
    */
   async getStaleWhileRevalidate(
     key: string, 
@@ -267,11 +267,11 @@ export class CacheManager {
     const cached = await this.get(key);
     
     if (cached && this.config.staleWhileRevalidate) {
-      // Arka planda refresh et
+      // Refresh in background
       refreshFn()
         .then(response => this.set(key, response))
         .catch(() => {
-          // Refresh hatası - sessizce devam et
+          // Ignore background refresh errors
         });
       
       return cached;
@@ -281,7 +281,7 @@ export class CacheManager {
   }
 
   /**
-   * Cache'i invalidate et (pattern ile)
+   * Delete keys matching a string or RegExp pattern
    */
   async invalidatePattern(pattern: string | RegExp): Promise<void> {
     if (this.storage instanceof MemoryStorage) {
@@ -297,7 +297,7 @@ export class CacheManager {
   }
 
   /**
-   * Cache warm-up (önceden cache'le)
+   * Pre-populate cache (warm-up)
    */
   async warmUp(requests: Array<{ config: SaxiosRequestConfig; fetcher: () => Promise<SaxiosResponse> }>): Promise<void> {
     const promises = requests.map(async ({ config, fetcher }) => {
@@ -307,7 +307,7 @@ export class CacheManager {
           const key = this.generateKey(config);
           await this.set(key, response);
         } catch (error) {
-          // Warm-up hatası - sessizce devam et
+          // Ignore warm-up errors
         }
       }
     });

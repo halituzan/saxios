@@ -22,21 +22,21 @@ import { createCacheKey, isCacheableResponse, parseCacheControlTTL } from '../ca
 let globalCacheManager: CacheManager | null = null;
 
 /**
- * Global cache manager'ı ayarla
+ * Set the global cache manager
  */
 export function setGlobalCacheManager(cacheManager: CacheManager): void {
   globalCacheManager = cacheManager;
 }
 
 /**
- * Global cache manager'ı al
+ * Get the global cache manager
  */
 export function getGlobalCacheManager(): CacheManager | null {
   return globalCacheManager;
 }
 
 /**
- * Fetch tabanlı HTTP adapter (cache desteği ile)
+ * Fetch-based HTTP adapter (with cache support)
  */
 export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): Promise<SaxiosResponse> => {
   return new Promise(async (resolve, reject) => {
@@ -61,7 +61,7 @@ export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): 
     } = config;
 
     try {
-      // Cache konfigürasyonunu al
+      // Resolve cache configuration
       let cacheManager: CacheManager | null = null;
       let cacheConfig: any = null;
       
@@ -79,18 +79,18 @@ export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): 
         cacheManager = globalCacheManager;
       }
 
-      // URL oluştur
+      // Build URL
       const fullURL = buildURL(url, params, paramsSerializer);
       
-      // Cache key oluştur
+      // Build cache key
       let cacheKey: string | null = null;
       if (cacheManager && cacheManager.isCacheable(config)) {
         cacheKey = createCacheKey({ ...config, url: fullURL });
         
-        // Cache'den kontrol et
+        // Check cache
         const cachedResponse = await cacheManager.get(cacheKey);
         if (cachedResponse) {
-          // Cache hit - cached response'u döndür
+          // Cache hit — return cached response
           const response: SaxiosResponse = {
             data: cachedResponse.data,
             status: cachedResponse.status,
@@ -105,11 +105,11 @@ export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): 
         }
       }
 
-      // AbortController oluştur
+      // Create AbortController
       const controller = new AbortController();
       let abortSignal = controller.signal;
 
-      // Mevcut signal varsa birleştir
+      // Merge with existing signal if present
       if (signal) {
         if (signal.aborted) {
           controller.abort();
@@ -118,7 +118,7 @@ export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): 
         }
       }
 
-      // Cancel token kontrolü
+      // Cancel token check
       if (cancelToken) {
         if (cancelToken.reason) {
           throw cancelToken.reason;
@@ -130,7 +130,7 @@ export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): 
         });
       }
 
-      // Headers'ı hazırla
+      // Prepare headers
       const fetchHeaders = new Headers();
       Object.keys(headers).forEach(key => {
         const value = headers[key];
@@ -139,16 +139,16 @@ export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): 
         }
       });
 
-      // Request body'yi hazırla
+      // Prepare request body
       let body: any = data;
       
       if (data !== null && data !== undefined) {
         if (isFormData(data) || isURLSearchParams(data) || 
             isArrayBuffer(data) || isArrayBufferView(data) || 
             typeof data === 'string') {
-          // Bu tipleri olduğu gibi gönder
+          // Send these types as-is
         } else if (typeof data === 'object') {
-          // JSON olarak serialize et
+          // Serialize as JSON
           body = JSON.stringify(data);
           if (!fetchHeaders.has('Content-Type')) {
             fetchHeaders.set('Content-Type', 'application/json');
@@ -156,7 +156,7 @@ export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): 
         }
       }
 
-      // Content-Length kontrolü
+      // Content-Length check
       if (maxBodyLength && maxBodyLength > 0 && body) {
         const contentLength = getContentLength(body);
         if (contentLength > maxBodyLength) {
@@ -179,8 +179,8 @@ export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): 
 
       // Upload progress tracking
       if (onUploadProgress && body) {
-        // Not: Fetch API upload progress'i desteklemiyor
-        // Bu özellik için XMLHttpRequest kullanılması gerekebilir
+        // Note: Fetch API does not support upload progress
+        // XMLHttpRequest may be required for this feature
       }
 
       // Timeout promise
@@ -190,16 +190,16 @@ export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): 
         promises.push(createTimeoutPromise(timeout, timeoutErrorMessage));
       }
 
-      // Request'i gönder
+      // Send request
       const fetchResponse = await Promise.race(promises) as Response;
 
-      // Response headers'ını dönüştür
+      // Normalize response headers
       const responseHeaders: SaxiosHeaders = {};
       fetchResponse.headers.forEach((value, key) => {
         responseHeaders[key] = value;
       });
 
-      // Content-Length kontrolü
+      // Content-Length check
       if (maxContentLength && maxContentLength > 0) {
         const contentLength = parseInt(responseHeaders['content-length'] as string || '0', 10);
         if (contentLength > maxContentLength) {
@@ -219,7 +219,7 @@ export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): 
         }
       }
 
-      // Response data'yı parse et
+      // Parse response body
       let responseData: any;
       
       try {
@@ -287,13 +287,13 @@ export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): 
 
       // Status validation
       if (validateStatus(saxiosResponse.status)) {
-        // Cache'e kaydet (eğer cache manager varsa ve cacheable ise)
+        // Store in cache when cache manager is present and response is cacheable
         if (cacheManager && cacheKey && isCacheableResponse(
           saxiosResponse.status, 
           responseHeaders, 
           method
         )) {
-          // Cache-Control header'ından TTL'yi parse et
+          // Parse TTL from Cache-Control header
           const headerTtl = parseCacheControlTTL(responseHeaders);
           const ttl = headerTtl || (cacheConfig?.ttl);
           
@@ -328,7 +328,7 @@ export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): 
 };
 
 /**
- * Content length hesaplayan yardımcı fonksiyon
+ * Computes approximate content length for progress tracking
  */
 function getContentLength(data: any): number {
   if (!data) return 0;

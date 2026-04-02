@@ -1,7 +1,7 @@
 import { CacheStorage, CachedResponse } from './types';
 
 /**
- * Memory tabanlı cache storage
+ * In-memory cache storage
  */
 export class MemoryStorage implements CacheStorage {
   private cache = new Map<string, CachedResponse>();
@@ -13,7 +13,7 @@ export class MemoryStorage implements CacheStorage {
   }
 
   /**
-   * Cache'den veri al
+   * Read from cache
    */
   get(key: string): CachedResponse | null {
     const item = this.cache.get(key);
@@ -22,7 +22,7 @@ export class MemoryStorage implements CacheStorage {
       return null;
     }
 
-    // TTL kontrolü
+    // TTL check
     if (item.ttl && Date.now() - item.timestamp > item.ttl) {
       this.delete(key);
       return null;
@@ -32,25 +32,25 @@ export class MemoryStorage implements CacheStorage {
   }
 
   /**
-   * Cache'e veri kaydet
+   * Write to cache
    */
   set(key: string, value: CachedResponse, ttl?: number): void {
-    // Max size kontrolü
+    // Max size enforcement
     if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
-      // LRU eviction - en eski item'ı sil
+      // LRU eviction — drop oldest entry
       const firstKey = this.cache.keys().next().value;
       if (firstKey) {
         this.delete(firstKey);
       }
     }
 
-    // Mevcut timer'ı temizle
+    // Clear existing expiry timer
     const existingTimer = this.timers.get(key);
     if (existingTimer) {
       clearTimeout(existingTimer);
     }
 
-    // TTL ayarla
+    // Apply TTL
     const finalTtl = ttl || value.ttl;
     if (finalTtl) {
       value.ttl = finalTtl;
@@ -67,7 +67,7 @@ export class MemoryStorage implements CacheStorage {
   }
 
   /**
-   * Cache'den veri sil
+   * Delete a cache entry
    */
   delete(key: string): void {
     this.cache.delete(key);
@@ -80,12 +80,12 @@ export class MemoryStorage implements CacheStorage {
   }
 
   /**
-   * Tüm cache'i temizle
+   * Clear all entries
    */
   clear(): void {
     this.cache.clear();
     
-    // Tüm timer'ları temizle
+    // Clear all expiry timers
     for (const timer of this.timers.values()) {
       clearTimeout(timer);
     }
@@ -93,28 +93,28 @@ export class MemoryStorage implements CacheStorage {
   }
 
   /**
-   * Key'in cache'de olup olmadığını kontrol et
+   * Whether a valid entry exists for key
    */
   has(key: string): boolean {
     return this.cache.has(key) && this.get(key) !== null;
   }
 
   /**
-   * Cache boyutu
+   * Number of entries
    */
   get size(): number {
     return this.cache.size;
   }
 
   /**
-   * Tüm key'leri döndür
+   * Iterator over cache keys
    */
   keys(): IterableIterator<string> {
     return this.cache.keys();
   }
 
   /**
-   * Cache'i JSON'a serialize et
+   * Serialize cache to a plain object
    */
   toJSON(): Record<string, CachedResponse> {
     const result: Record<string, CachedResponse> = {};
@@ -125,7 +125,7 @@ export class MemoryStorage implements CacheStorage {
   }
 
   /**
-   * JSON'dan cache'i restore et
+   * Restore cache from serialized data
    */
   fromJSON(data: Record<string, CachedResponse>): void {
     this.clear();

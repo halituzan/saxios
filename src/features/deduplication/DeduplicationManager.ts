@@ -13,8 +13,7 @@ interface PendingRequest<T = any> {
 }
 
 /**
- * Request Deduplication Manager
- * Aynı request'leri birleştirir, tek seferde gönderir
+ * Request deduplication — coalesces in-flight identical requests
  */
 export class DeduplicationManager {
   private config: Required<DeduplicationConfig>;
@@ -25,15 +24,15 @@ export class DeduplicationManager {
     this.config = {
       enabled: config.enabled ?? false,
       keyGenerator: config.keyGenerator ?? this.defaultKeyGenerator,
-      ttl: config.ttl ?? 60000 // 1 dakika
+      ttl: config.ttl ?? 60000 // 1 minute
     };
 
-    // Cleanup timer başlat
+    // Periodic cleanup of stale pending entries
     this.startCleanupTimer();
   }
 
   /**
-   * Request'i deduplicate et
+   * Deduplicate by key or pass through when disabled
    */
   async deduplicate<T = any>(
     key: string,
@@ -47,13 +46,13 @@ export class DeduplicationManager {
     const existingRequest = this.pendingRequests.get(requestKey);
 
     if (existingRequest) {
-      // Mevcut request'e subscribe ol
+      // Join existing in-flight request
       return new Promise<SaxiosResponse<T>>((resolve, reject) => {
         existingRequest.subscribers.push({ resolve, reject });
       });
     }
 
-    // Yeni request oluştur
+    // Start new leader request
     return new Promise<SaxiosResponse<T>>((resolve, reject) => {
       const pendingRequest: PendingRequest<T> = {
         promise: requestFn(),
@@ -65,33 +64,31 @@ export class DeduplicationManager {
 
       this.pendingRequests.set(requestKey, pendingRequest);
 
-      // Request'i execute et
+      // Execute and fan out to subscribers
       pendingRequest.promise
         .then((response) => {
-          // Ana request'i resolve et
+          // Resolve leader
           pendingRequest.resolve(response);
           
-          // Tüm subscriber'ları resolve et
+          // Resolve subscribers
           pendingRequest.subscribers.forEach(sub => sub.resolve(response));
           
-          // Cleanup
           this.pendingRequests.delete(requestKey);
         })
         .catch((error) => {
-          // Ana request'i reject et
+          // Reject leader
           pendingRequest.reject(error);
           
-          // Tüm subscriber'ları reject et
+          // Reject subscribers
           pendingRequest.subscribers.forEach(sub => sub.reject(error));
           
-          // Cleanup
           this.pendingRequests.delete(requestKey);
         });
     });
   }
 
   /**
-   * Request key oluştur
+   * Build dedup key from config
    */
   generateKey(config: SaxiosRequestConfig): string {
     return this.config.keyGenerator(config);
@@ -106,7 +103,7 @@ export class DeduplicationManager {
     const params = config.params ? JSON.stringify(config.params) : '';
     const data = config.data ? JSON.stringify(config.data) : '';
     
-    // Headers'dan önemli olanları al
+    // Include auth/content headers in key
     const relevantHeaders: Record<string, any> = {};
     if (config.headers) {
       const importantHeaders = ['authorization', 'content-type', 'accept'];
@@ -124,16 +121,16 @@ export class DeduplicationManager {
   }
 
   /**
-   * Cleanup timer başlat
+   * Run cleanup on half the TTL interval
    */
   private startCleanupTimer(): void {
     this.cleanupTimer = setInterval(() => {
       this.cleanup();
-    }, this.config.ttl / 2); // TTL'nin yarısında bir cleanup yap
+    }, this.config.ttl / 2);
   }
 
   /**
-   * Expired request'leri temizle
+   * Drop pending entries past TTL
    */
   private cleanup(): void {
     const now = Date.now();
@@ -148,7 +145,7 @@ export class DeduplicationManager {
     expiredKeys.forEach(key => {
       const request = this.pendingRequests.get(key);
       if (request) {
-        // Timeout error ile reject et
+        // Reject with timeout
         const timeoutError = new Error(`Request deduplication timeout: ${key}`);
         request.reject(timeoutError);
         request.subscribers.forEach(sub => sub.reject(timeoutError));
@@ -158,21 +155,21 @@ export class DeduplicationManager {
   }
 
   /**
-   * Pending request'lerin sayısını al
+   * Number of in-flight dedup groups
    */
   getPendingCount(): number {
     return this.pendingRequests.size;
   }
 
   /**
-   * Pending request'leri listele
+   * Keys of pending dedup groups
    */
   getPendingKeys(): string[] {
     return Array.from(this.pendingRequests.keys());
   }
 
   /**
-   * Tüm pending request'leri temizle
+   * Reject and clear all pending
    */
   clear(): void {
     this.pendingRequests.forEach((request, key) => {
@@ -184,28 +181,28 @@ export class DeduplicationManager {
   }
 
   /**
-   * Konfigürasyonu güncelle
+   * Merge partial config
    */
   updateConfig(newConfig: Partial<DeduplicationConfig>): void {
     Object.assign(this.config, newConfig);
   }
 
   /**
-   * Konfigürasyonu al
+   * Current dedup settings
    */
   getConfig(): DeduplicationConfig {
     return { ...this.config };
   }
 
   /**
-   * Deduplication'ı etkinleştir
+   * Enable deduplication
    */
   enable(): void {
     this.config.enabled = true;
   }
 
   /**
-   * Deduplication'ı devre dışı bırak
+   * Disable and clear pending
    */
   disable(): void {
     this.config.enabled = false;
@@ -213,14 +210,14 @@ export class DeduplicationManager {
   }
 
   /**
-   * Etkin mi kontrol et
+   * Whether deduplication is enabled
    */
   isEnabled(): boolean {
     return this.config.enabled;
   }
 
   /**
-   * Cleanup timer'ı durdur
+   * Stop interval and clear state
    */
   destroy(): void {
     if (this.cleanupTimer) {

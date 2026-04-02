@@ -44,7 +44,7 @@ describe('saxios Cache System', () => {
         cache: true
       });
 
-      // Cache'in etkin olduğunu kontrol et
+      // Ensure cache is enabled
       expect(instance.cache.isEnabled()).toBe(true);
 
       const responseData = { id: 1, name: 'Test User' };
@@ -56,22 +56,22 @@ describe('saxios Cache System', () => {
         text: () => Promise.resolve(JSON.stringify(responseData))
       } as Response);
 
-      // İlk request - cache miss
+      // First request — cache miss
       const response1 = await instance.get('https://api.example.com/users/1');
       expect(response1.data).toEqual(responseData);
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
-      // İkinci request - cache hit olmalı
+      // Second request — cache hit
       const response2 = await instance.get('https://api.example.com/users/1');
       expect(response2.data).toEqual(responseData);
       
-      // Cache stats kontrol et - hit olmalı
+      // Stats should show one hit
       const stats = instance.cache.getStats();
       expect(stats.hits).toBe(1);
       expect(stats.misses).toBe(1);
       expect(stats.hitRate).toBe(50);
       
-      expect(mockFetch).toHaveBeenCalledTimes(1); // Aynı sayıda çağrı
+      expect(mockFetch).toHaveBeenCalledTimes(1); // fetch not called again
     });
 
     it('should not cache POST requests by default', async () => {
@@ -88,18 +88,18 @@ describe('saxios Cache System', () => {
         text: () => Promise.resolve(JSON.stringify(responseData))
       } as Response);
 
-      // İki POST request
+      // Two POST requests
       await instance.post('https://api.example.com/users', { name: 'Test' });
       await instance.post('https://api.example.com/users', { name: 'Test' });
 
-      expect(mockFetch).toHaveBeenCalledTimes(2); // Her ikisi de gerçek request
+      expect(mockFetch).toHaveBeenCalledTimes(2); // both hit network
     });
 
     it('should respect cache TTL', async () => {
       const instance = saxios.create({
         cache: {
           enabled: true,
-          ttl: 100 // 100ms TTL
+          ttl: 100 // 100 ms TTL
         }
       });
 
@@ -112,25 +112,25 @@ describe('saxios Cache System', () => {
         text: () => Promise.resolve(JSON.stringify(responseData))
       } as Response);
 
-      // İlk request
+      // First request
       await instance.get('https://api.example.com/users/1');
       let stats = instance.cache.getStats();
       expect(stats.sets).toBe(1);
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
-      // Hemen ikinci request - cache hit
+      // Immediate second request — cache hit
       await instance.get('https://api.example.com/users/1');
       stats = instance.cache.getStats();
       expect(stats.hits).toBe(1);
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
-      // TTL'yi bekle
+      // Wait past TTL
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      // TTL sonrası request - cache miss
+      // After TTL — cache miss
       await instance.get('https://api.example.com/users/1');
       stats = instance.cache.getStats();
-      expect(stats.misses).toBe(2); // İlk miss + TTL sonrası miss
+      expect(stats.misses).toBe(2); // initial miss + post-TTL miss
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
@@ -147,17 +147,17 @@ describe('saxios Cache System', () => {
         text: () => Promise.resolve('{}')
       } as Response);
 
-      // Farklı URL'ler
+      // Different URLs
       await instance.get('https://api.example.com/users/1');
       await instance.get('https://api.example.com/users/2');
-      await instance.get('https://api.example.com/users/1'); // Cache hit
-      await instance.get('https://api.example.com/users/2'); // Cache hit
+      await instance.get('https://api.example.com/users/1'); // hit
+      await instance.get('https://api.example.com/users/2'); // hit
 
       const stats = instance.cache.getStats();
-      expect(stats.hits).toBe(2); // İki cache hit
-      expect(stats.misses).toBe(2); // İki cache miss
-      expect(stats.sets).toBe(2); // İki cache set
-      expect(mockFetch).toHaveBeenCalledTimes(2); // Sadece ilk iki request
+      expect(stats.hits).toBe(2);
+      expect(stats.misses).toBe(2);
+      expect(stats.sets).toBe(2);
+      expect(mockFetch).toHaveBeenCalledTimes(2); // only first two miss network
     });
 
     it('should handle different cache keys for different params', async () => {
@@ -173,15 +173,15 @@ describe('saxios Cache System', () => {
         text: () => Promise.resolve('{}')
       } as Response);
 
-      // Farklı parametreler
+      // Different query params
       await instance.get('https://api.example.com/users', { params: { page: 1 } });
       await instance.get('https://api.example.com/users', { params: { page: 2 } });
-      await instance.get('https://api.example.com/users', { params: { page: 1 } }); // Cache hit
+      await instance.get('https://api.example.com/users', { params: { page: 1 } }); // hit
 
       const stats = instance.cache.getStats();
-      expect(stats.hits).toBe(1); // Bir cache hit
-      expect(stats.misses).toBe(2); // İki cache miss
-      expect(mockFetch).toHaveBeenCalledTimes(2); // Sadece ilk iki request
+      expect(stats.hits).toBe(1);
+      expect(stats.misses).toBe(2);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -209,14 +209,14 @@ describe('saxios Cache System', () => {
         text: () => Promise.resolve('{}')
       } as Response);
 
-      // Cache'e bir şey ekle
+      // Populate cache
       await instance.get('https://api.example.com/users/1');
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
-      // Cache'i temizle
+      // Clear cache
       await instance.cache.clear();
 
-      // Tekrar aynı request - cache miss olmalı
+      // Same URL again — miss after clear
       await instance.get('https://api.example.com/users/1');
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
@@ -234,20 +234,20 @@ describe('saxios Cache System', () => {
         text: () => Promise.resolve('{}')
       } as Response);
 
-      // Cache enabled - ilk request
+      // Cache on — first request
       await instance.get('https://api.example.com/users/1');
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
-      // Cache enabled - cache hit
+      // Second call — hit
       await instance.get('https://api.example.com/users/1');
       let stats = instance.cache.getStats();
       expect(stats.hits).toBe(1);
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
-      // Cache'i devre dışı bırak
+      // Disable cache
       instance.cache.disable();
 
-      // Cache disabled - yeni request
+      // Cache off — network again
       await instance.get('https://api.example.com/users/1');
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
@@ -282,20 +282,20 @@ describe('saxios Cache System', () => {
         timestamp: Date.now()
       };
 
-      storage.set('test-key', data, 50); // 50ms TTL
+      storage.set('test-key', data, 50); // 50 ms TTL
       
-      // Hemen al - bulmalı
+      // Should exist immediately
       expect(storage.get('test-key')).toEqual(data);
       
-      // TTL'yi bekle
+      // Wait past TTL
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // TTL sonrası - bulmamalı
+      // Expired — gone
       expect(storage.get('test-key')).toBeNull();
     });
 
     it('should respect max size limit', () => {
-      const storage = new MemoryStorage(2); // Max 2 item
+      const storage = new MemoryStorage(2); // max 2 entries
       
       const data1 = { data: '1', status: 200, statusText: 'OK', headers: {}, config: {}, timestamp: Date.now() };
       const data2 = { data: '2', status: 200, statusText: 'OK', headers: {}, config: {}, timestamp: Date.now() };
@@ -303,9 +303,9 @@ describe('saxios Cache System', () => {
 
       storage.set('key1', data1);
       storage.set('key2', data2);
-      storage.set('key3', data3); // Bu, key1'i evict etmeli
+      storage.set('key3', data3); // should evict key1
 
-      expect(storage.get('key1')).toBeNull(); // Evicted
+      expect(storage.get('key1')).toBeNull();
       expect(storage.get('key2')).toEqual(data2);
       expect(storage.get('key3')).toEqual(data3);
     });
@@ -314,10 +314,10 @@ describe('saxios Cache System', () => {
   describe('Request-level cache control', () => {
     it('should override instance cache config with request-level config', async () => {
       const instance = saxios.create({
-        cache: false // Instance level cache disabled
+        cache: false // instance-level cache off
       });
 
-      // Instance cache'in disabled olduğunu kontrol et
+      // Instance cache should stay disabled
       expect(instance.cache.isEnabled()).toBe(false);
 
       mockFetch.mockResolvedValue({
@@ -328,20 +328,19 @@ describe('saxios Cache System', () => {
         text: () => Promise.resolve('{}')
       } as Response);
 
-      // Request level cache enabled - bu durumda yeni cache manager oluşturulur
+      // Per-request cache: new manager each time in this path
       await instance.get('https://api.example.com/users/1', {
         cache: true
       });
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
-      // İkinci request - yine request level cache
+      // Second request — same per-request cache behavior
       await instance.get('https://api.example.com/users/1', {
         cache: true
       });
       
-      // Bu test senaryosunda her request için yeni cache manager oluşturuluyor
-      // Bu yüzden cache hit olmaz, ama fetch sadece bir kez çağrılmalı
-      expect(mockFetch).toHaveBeenCalledTimes(2); // Her request için ayrı cache manager
+      // Each call uses a fresh cache manager — no cross-request hits
+      expect(mockFetch).toHaveBeenCalledTimes(2);
     });
   });
 });

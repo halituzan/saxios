@@ -15,7 +15,7 @@ interface BatchGroup {
 }
 
 /**
- * Batching Manager - Request'leri batch'leyerek gönderme
+ * Batching manager — sends requests in batches
  */
 export class BatchingManager {
   private config: Required<BatchingConfig>;
@@ -32,7 +32,7 @@ export class BatchingManager {
   }
 
   /**
-   * Request'i batch'e ekle
+   * Add a request to a batch
    */
   async batchRequest<T = any>(
     config: SaxiosRequestConfig,
@@ -56,17 +56,17 @@ export class BatchingManager {
   }
 
   /**
-   * Request'in batch'lenebilir olup olmadığını kontrol et
+   * Whether the request can be batched
    */
   private isBatchable(config: SaxiosRequestConfig): boolean {
     const method = (config.method || 'GET').toUpperCase();
     
-    // Sadece GET request'leri batch'lenir
+    // Only GET requests are batched
     if (method !== 'GET') {
       return false;
     }
 
-    // Cancel token varsa batch'leme
+    // Do not batch when cancel token or signal is present
     if (config.cancelToken || config.signal) {
       return false;
     }
@@ -75,7 +75,7 @@ export class BatchingManager {
   }
 
   /**
-   * Request'i batch'e ekle
+   * Append a request to the batch queue
    */
   private addToBatch(batchKey: string, request: BatchedRequest): void {
     let batch = this.batches.get(batchKey);
@@ -90,16 +90,16 @@ export class BatchingManager {
 
     batch.requests.push(request);
 
-    // Timer'ı sıfırla
+    // Reset debounce timer
     if (batch.timer) {
       clearTimeout(batch.timer);
     }
 
-    // Batch size kontrolü
+    // Batch size limit
     if (batch.requests.length >= this.config.maxBatchSize) {
       this.executeBatch(batchKey);
     } else {
-      // Delay timer kur
+      // Schedule delayed flush
       batch.timer = setTimeout(() => {
         this.executeBatch(batchKey);
       }, this.config.batchDelay);
@@ -107,7 +107,7 @@ export class BatchingManager {
   }
 
   /**
-   * Batch'i execute et
+   * Execute a batch
    */
   private async executeBatch(batchKey: string): Promise<void> {
     const batch = this.batches.get(batchKey);
@@ -115,31 +115,31 @@ export class BatchingManager {
       return;
     }
 
-    // Batch'i map'den çıkar
+    // Remove batch from map
     this.batches.delete(batchKey);
 
-    // Timer'ı temizle
+    // Clear timer
     if (batch.timer) {
       clearTimeout(batch.timer);
     }
 
     try {
-      // Batch request oluştur
+      // Build batch request payload
       const batchRequest = this.createBatchRequest(batch.requests);
       
-      // Batch'i gönder
+      // Send batch
       const batchResponse = await this.sendBatchRequest(batchRequest);
       
-      // Response'ları dağıt
+      // Fan out responses
       this.distributeBatchResponse(batch.requests, batchResponse);
     } catch (error) {
-      // Hata durumunda tüm request'leri reject et
+      // Reject all batched requests on error
       batch.requests.forEach(req => req.reject(error));
     }
   }
 
   /**
-   * Batch request oluştur
+   * Build batch request config
    */
   private createBatchRequest(requests: BatchedRequest[]): SaxiosRequestConfig {
     const batchData = {
@@ -163,11 +163,10 @@ export class BatchingManager {
   }
 
   /**
-   * Batch request'i gönder
+   * Send the batch request (implementation uses fetch in production)
    */
   private async sendBatchRequest(batchConfig: SaxiosRequestConfig): Promise<any> {
-    // Bu kısım gerçek implementasyonda fetch ile yapılacak
-    // Şimdilik mock response döndür
+    // Real implementation would use fetch; mock for now
     console.log('Sending batch request:', batchConfig);
     
     // Mock batch response
@@ -183,7 +182,7 @@ export class BatchingManager {
   }
 
   /**
-   * Batch response'ını dağıt
+   * Distribute batch response to callers
    */
   private distributeBatchResponse(requests: BatchedRequest[], batchResponse: any): void {
     const responses = batchResponse.responses || [];
@@ -212,18 +211,18 @@ export class BatchingManager {
    * Default batch key generator
    */
   private defaultBatchKey(config: SaxiosRequestConfig): string {
-    // Aynı base URL'e sahip request'leri batch'le
+    // Group by base URL
     const baseURL = config.baseURL || '';
     const method = (config.method || 'GET').toUpperCase();
     
-    // Headers'dan önemli olanları al
+    // Include auth-relevant headers in key
     const authHeader = config.headers?.authorization || config.headers?.Authorization || '';
     
     return `${method}:${baseURL}:${authHeader}`;
   }
 
   /**
-   * Pending batch'lerin durumunu al
+   * Snapshot of pending batches
    */
   getBatchStatus(): {
     totalBatches: number;
@@ -262,7 +261,7 @@ export class BatchingManager {
   }
 
   /**
-   * Tüm pending batch'leri flush et
+   * Flush all pending batches immediately
    */
   flushAll(): void {
     const batchKeys = Array.from(this.batches.keys());
@@ -270,14 +269,14 @@ export class BatchingManager {
   }
 
   /**
-   * Belirli bir batch'i flush et
+   * Flush a specific batch by key
    */
   flushBatch(batchKey: string): void {
     this.executeBatch(batchKey);
   }
 
   /**
-   * Tüm batch'leri iptal et
+   * Cancel all batches
    */
   cancelAll(): void {
     this.batches.forEach(batch => {
@@ -292,21 +291,21 @@ export class BatchingManager {
   }
 
   /**
-   * Konfigürasyonu güncelle
+   * Update configuration
    */
   updateConfig(newConfig: Partial<BatchingConfig>): void {
     Object.assign(this.config, newConfig);
   }
 
   /**
-   * Batching'i etkinleştir
+   * Enable batching
    */
   enable(): void {
     this.config.enabled = true;
   }
 
   /**
-   * Batching'i devre dışı bırak
+   * Disable batching
    */
   disable(): void {
     this.config.enabled = false;
@@ -314,14 +313,14 @@ export class BatchingManager {
   }
 
   /**
-   * Etkin mi kontrol et
+   * Whether batching is enabled
    */
   isEnabled(): boolean {
     return this.config.enabled;
   }
 
   /**
-   * Temizlik yap
+   * Tear down and cancel pending work
    */
   destroy(): void {
     this.cancelAll();

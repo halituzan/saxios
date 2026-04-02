@@ -1,7 +1,7 @@
 import { SaxiosHeaders, SaxiosRequestConfig } from '../types';
 
 /**
- * URL'leri birleştiren yardımcı fonksiyon
+ * Joins a base URL and a relative path
  */
 export function combineURLs(baseURL: string, relativeURL: string): string {
   return relativeURL
@@ -10,14 +10,14 @@ export function combineURLs(baseURL: string, relativeURL: string): string {
 }
 
 /**
- * Absolute URL olup olmadığını kontrol eden fonksiyon
+ * Returns whether the URL is absolute
  */
 export function isAbsoluteURL(url: string): boolean {
   return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
 }
 
 /**
- * URL oluşturan fonksiyon
+ * Builds a URL with serialized query params
  */
 export function buildURL(url: string, params?: any, paramsSerializer?: (params: any) => string): string {
   if (!params) {
@@ -72,7 +72,7 @@ export function buildURL(url: string, params?: any, paramsSerializer?: (params: 
 }
 
 /**
- * Full URL oluşturan fonksiyon
+ * Builds the full URL from baseURL and path
  */
 export function buildFullPath(baseURL?: string, requestedURL?: string): string {
   if (baseURL && !isAbsoluteURL(requestedURL || '')) {
@@ -82,7 +82,7 @@ export function buildFullPath(baseURL?: string, requestedURL?: string): string {
 }
 
 /**
- * Headers'ı normalize eden fonksiyon
+ * Normalizes header names (case-insensitive dedupe)
  */
 export function normalizeHeaderName(headers: SaxiosHeaders, normalizedName: string): void {
   Object.keys(headers).forEach(name => {
@@ -94,7 +94,7 @@ export function normalizeHeaderName(headers: SaxiosHeaders, normalizedName: stri
 }
 
 /**
- * Object'i deep merge eden fonksiyon
+ * Deep-merge plain objects
  */
 export function deepMerge(...objects: any[]): any {
   const result: any = {};
@@ -121,77 +121,77 @@ export function deepMerge(...objects: any[]): any {
 }
 
 /**
- * Object olup olmadığını kontrol eden fonksiyon
+ * Type guard for plain objects
  */
 export function isObject(thing: any): thing is object {
   return thing !== null && typeof thing === 'object' && !Array.isArray(thing);
 }
 
 /**
- * String olup olmadığını kontrol eden fonksiyon
+ * Type guard for strings
  */
 export function isString(thing: any): thing is string {
   return typeof thing === 'string';
 }
 
 /**
- * Date olup olmadığını kontrol eden fonksiyon
+ * Type guard for Date
  */
 export function isDate(thing: any): thing is Date {
   return Object.prototype.toString.call(thing) === '[object Date]';
 }
 
 /**
- * File olup olmadığını kontrol eden fonksiyon
+ * Type guard for File
  */
 export function isFile(thing: any): thing is File {
   return Object.prototype.toString.call(thing) === '[object File]';
 }
 
 /**
- * Blob olup olmadığını kontrol eden fonksiyon
+ * Type guard for Blob
  */
 export function isBlob(thing: any): thing is Blob {
   return Object.prototype.toString.call(thing) === '[object Blob]';
 }
 
 /**
- * Function olup olmadığını kontrol eden fonksiyon
+ * Type guard for functions
  */
 export function isFunction(thing: any): thing is Function {
   return typeof thing === 'function';
 }
 
 /**
- * Stream olup olmadığını kontrol eden fonksiyon
+ * Whether the value looks like a Node stream
  */
 export function isStream(thing: any): boolean {
   return isObject(thing) && isFunction((thing as any).pipe);
 }
 
 /**
- * URLSearchParams olup olmadığını kontrol eden fonksiyon
+ * Type guard for URLSearchParams
  */
 export function isURLSearchParams(thing: any): thing is URLSearchParams {
   return typeof URLSearchParams !== 'undefined' && thing instanceof URLSearchParams;
 }
 
 /**
- * FormData olup olmadığını kontrol eden fonksiyon
+ * Type guard for FormData
  */
 export function isFormData(thing: any): thing is FormData {
   return typeof FormData !== 'undefined' && thing instanceof FormData;
 }
 
 /**
- * ArrayBuffer olup olmadığını kontrol eden fonksiyon
+ * Type guard for ArrayBuffer
  */
 export function isArrayBuffer(thing: any): thing is ArrayBuffer {
   return Object.prototype.toString.call(thing) === '[object ArrayBuffer]';
 }
 
 /**
- * ArrayBufferView olup olmadığını kontrol eden fonksiyon
+ * Whether the value is an ArrayBuffer view
  */
 export function isArrayBufferView(thing: any): boolean {
   let result;
@@ -204,7 +204,7 @@ export function isArrayBufferView(thing: any): boolean {
 }
 
 /**
- * Config'leri merge eden fonksiyon
+ * Merges two request configs (axios-style precedence)
  */
 export function mergeConfig(config1: SaxiosRequestConfig, config2: SaxiosRequestConfig): SaxiosRequestConfig {
   const config: SaxiosRequestConfig = {};
@@ -272,7 +272,7 @@ export function mergeConfig(config1: SaxiosRequestConfig, config2: SaxiosRequest
 }
 
 /**
- * Timeout promise oluşturan fonksiyon
+ * Promise that rejects after `timeout` ms
  */
 export function createTimeoutPromise(timeout: number, timeoutErrorMessage?: string): Promise<never> {
   return new Promise((_, reject) => {

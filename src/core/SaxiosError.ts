@@ -1,7 +1,7 @@
 import { SaxiosRequestConfig, SaxiosResponse, SaxiosError as ISaxiosError } from '../types';
 
 /**
- * saxios Error sınıfı
+ * saxios error type
  */
 export class SaxiosError<T = unknown, D = any> extends Error implements ISaxiosError<T, D> {
   public isSaxiosError: boolean = true;
@@ -27,7 +27,7 @@ export class SaxiosError<T = unknown, D = any> extends Error implements ISaxiosE
     this.response = response;
     this.status = response?.status;
 
-    // Error stack trace'ini düzelt
+    // Preserve correct stack for subclasses
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }
@@ -72,7 +72,7 @@ export class SaxiosError<T = unknown, D = any> extends Error implements ISaxiosE
 }
 
 /**
- * SaxiosError oluşturan factory fonksiyonu
+ * Factory for SaxiosError instances
  */
 export function createError<T = unknown, D = any>(
   message: string,
@@ -85,13 +85,13 @@ export function createError<T = unknown, D = any>(
 }
 
 /**
- * SaxiosError olup olmadığını kontrol eden fonksiyon
+ * Type guard for SaxiosError
  */
 export function isSaxiosError<T = any, D = any>(payload: any): payload is SaxiosError<T, D> {
   return payload && payload.isSaxiosError === true;
 }
 
-// Error kodları
+// Error codes
 export const ERROR_CODES = {
   ERR_FR_TOO_MANY_REDIRECTS: 'ERR_FR_TOO_MANY_REDIRECTS',
   ERR_UNESCAPED_CHARACTERS: 'ERR_UNESCAPED_CHARACTERS',

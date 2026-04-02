@@ -2,7 +2,7 @@ import { AnalyticsConfig, RequestMetrics } from '../types';
 import { SaxiosRequestConfig, SaxiosResponse, SaxiosError } from '../../types';
 
 /**
- * Analytics Manager - Request metrics ve analytics toplama
+ * Collects request metrics and optional batch flush to an endpoint
  */
 export class AnalyticsManager {
   private config: Required<AnalyticsConfig>;
@@ -17,7 +17,7 @@ export class AnalyticsManager {
       trackRetries: config.trackRetries ?? true,
       endpoint: config.endpoint ?? '/analytics',
       batchSize: config.batchSize ?? 50,
-      flushInterval: config.flushInterval ?? 30000, // 30 saniye
+      flushInterval: config.flushInterval ?? 30000, // 30 seconds
       customMetrics: config.customMetrics ?? {}
     };
 
@@ -27,7 +27,7 @@ export class AnalyticsManager {
   }
 
   /**
-   * Request başlangıcını track et
+   * Record request start; returns opaque metric id
    */
   trackRequestStart(config: SaxiosRequestConfig): string {
     if (!this.config.enabled) return '';
@@ -44,7 +44,7 @@ export class AnalyticsManager {
   }
 
   /**
-   * Request bitişini track et
+   * Record successful completion
    */
   trackRequestEnd(
     _metricId: string,
@@ -65,12 +65,12 @@ export class AnalyticsManager {
       metric.cacheHit = options.cacheHit;
       metric.retryCount = options.retryCount || 0;
 
-      // Custom metrics çalıştır
+      // Run custom metric hooks
       Object.keys(this.config.customMetrics).forEach(key => {
         try {
           (metric as any)[key] = this.config.customMetrics[key](config, response);
         } catch (error) {
-          // Custom metric hatası - sessizce devam et
+          // Ignore custom metric errors
         }
       });
     }
@@ -79,7 +79,7 @@ export class AnalyticsManager {
   }
 
   /**
-   * Request hatasını track et
+   * Record failed request
    */
   trackRequestError(
     _metricId: string,
@@ -104,7 +104,7 @@ export class AnalyticsManager {
   }
 
   /**
-   * Retry'ı track et
+   * Update retry count on metric
    */
   trackRetry(config: SaxiosRequestConfig, attemptNumber: number): void {
     if (!this.config.enabled || !this.config.trackRetries) return;
@@ -116,7 +116,7 @@ export class AnalyticsManager {
   }
 
   /**
-   * Custom event track et
+   * Push a synthetic custom event
    */
   trackCustomEvent(eventName: string, data: any): void {
     if (!this.config.enabled) return;
@@ -135,7 +135,7 @@ export class AnalyticsManager {
   }
 
   /**
-   * Metrics'leri analiz et
+   * Aggregated stats from collected metrics
    */
   getAnalytics(): {
     totalRequests: number;
@@ -185,7 +185,7 @@ export class AnalyticsManager {
   }
 
   /**
-   * Metrics'leri flush et
+   * Send buffered metrics to endpoint
    */
   async flush(): Promise<void> {
     if (!this.config.enabled || this.metrics.length === 0) return;
@@ -194,31 +194,30 @@ export class AnalyticsManager {
     this.metrics = [];
 
     try {
-      // Analytics endpoint'ine gönder
+      // POST to analytics endpoint
       if (this.config.endpoint) {
         await this.sendToEndpoint(metricsToSend);
       }
     } catch (error) {
-      // Analytics gönderme hatası - metrics'leri geri koy
+      // Restore buffer on failure
       this.metrics.unshift(...metricsToSend);
     }
   }
 
   /**
-   * Metrics'leri endpoint'e gönder
+   * Default transport (replace with fetch in production)
    */
   private async sendToEndpoint(metrics: RequestMetrics[]): Promise<void> {
-    // Bu kısım gerçek implementasyonda fetch ile yapılacak
-    // Şimdilik console'a log at
+    // Stub: log first few rows
     console.log('Analytics metrics sent:', {
       endpoint: this.config.endpoint,
       count: metrics.length,
-      metrics: metrics.slice(0, 5) // İlk 5 metric'i göster
+      metrics: metrics.slice(0, 5)
     });
   }
 
   /**
-   * Flush timer başlat
+   * Periodic flush interval
    */
   private startFlushTimer(): void {
     this.flushTimer = setInterval(() => {
@@ -227,7 +226,7 @@ export class AnalyticsManager {
   }
 
   /**
-   * Flush condition kontrol et
+   * Flush when batch size reached
    */
   private checkFlushCondition(): void {
     if (this.metrics.length >= this.config.batchSize) {
@@ -236,17 +235,17 @@ export class AnalyticsManager {
   }
 
   /**
-   * Metric ID oluştur
+   * Generate unique metric id
    */
   private generateMetricId(): string {
     return `metric_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
-   * URL'e göre metric bul
+   * Find open metric row by URL (most recent without endTime)
    */
   private findMetricByUrl(url: string): RequestMetrics | undefined {
-    // Son eklenen metric'i bul (genelde aynı request olur)
+    // Walk backwards — usually the same in-flight request
     for (let i = this.metrics.length - 1; i >= 0; i--) {
       const metric = this.metrics[i];
       if (metric.url === url && !metric.endTime) {
@@ -257,13 +256,13 @@ export class AnalyticsManager {
   }
 
   /**
-   * Konfigürasyonu güncelle
+   * Merge config and manage flush timer
    */
   updateConfig(newConfig: Partial<AnalyticsConfig>): void {
     const wasEnabled = this.config.enabled;
     Object.assign(this.config, newConfig);
 
-    // Timer yönetimi
+    // Start/stop interval when toggling enabled
     if (!wasEnabled && this.config.enabled) {
       this.startFlushTimer();
     } else if (wasEnabled && !this.config.enabled) {
@@ -272,7 +271,7 @@ export class AnalyticsManager {
   }
 
   /**
-   * Flush timer'ı durdur
+   * Clear flush interval
    */
   private stopFlushTimer(): void {
     if (this.flushTimer) {
@@ -282,7 +281,7 @@ export class AnalyticsManager {
   }
 
   /**
-   * Analytics'i etkinleştir
+   * Enable analytics
    */
   enable(): void {
     this.config.enabled = true;
@@ -290,7 +289,7 @@ export class AnalyticsManager {
   }
 
   /**
-   * Analytics'i devre dışı bırak
+   * Disable analytics
    */
   disable(): void {
     this.config.enabled = false;
@@ -298,17 +297,17 @@ export class AnalyticsManager {
   }
 
   /**
-   * Etkin mi kontrol et
+   * Whether analytics is enabled
    */
   isEnabled(): boolean {
     return this.config.enabled;
   }
 
   /**
-   * Temizlik yap
+   * Stop timer and flush remaining metrics
    */
   destroy(): void {
     this.stopFlushTimer();
-    this.flush(); // Son metrics'leri gönder
+    this.flush();
   }
 }

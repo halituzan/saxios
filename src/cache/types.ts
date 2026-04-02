@@ -29,60 +29,59 @@ export interface CachedResponse {
  */
 export interface CacheConfig {
   /**
-   * Cache'i etkinleştir/devre dışı bırak
+   * Enable or disable caching
    * @default false
    */
   enabled?: boolean;
   
   /**
-   * Default TTL (Time To Live) milisaniye cinsinden
-   * @default 300000 (5 dakika)
+   * Default TTL in milliseconds
+   * @default 300000 (5 minutes)
    */
   ttl?: number;
   
   /**
-   * Maximum cache size (entry sayısı)
+   * Maximum number of cache entries
    * @default 100
    */
   maxSize?: number;
   
   /**
-   * Cache storage implementasyonu
+   * Storage backend
    * @default MemoryStorage
    */
   storage?: CacheStorage;
   
   /**
-   * Cache key oluşturan fonksiyon
+   * Custom cache key factory
    */
   keyGenerator?: (config: SaxiosRequestConfig) => string;
   
   /**
-   * Hangi HTTP metodlarının cache'leneceği
+   * HTTP methods that may be cached
    * @default ['GET']
    */
   methods?: string[];
   
   /**
-   * Hangi status kodlarının cache'leneceği
+   * Status codes eligible for caching
    * @default [200, 203, 300, 301, 410]
    */
   statusCodes?: number[];
   
   /**
-   * Cache'lenecek response'ları filtreleyen fonksiyon
+   * Optional filter for responses to cache
    */
   filter?: (response: SaxiosResponse) => boolean;
   
   /**
-   * Stale-while-revalidate stratejisi
-   * Eski cache'i döndürür ve arka planda yeniler
+   * Stale-while-revalidate: return stale entry and refresh in background
    * @default false
    */
   staleWhileRevalidate?: boolean;
   
   /**
-   * Cache miss durumunda retry sayısı
+   * Retries on cache miss
    * @default 0
    */
   retryOnCacheMiss?: number;

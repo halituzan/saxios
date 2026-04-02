@@ -1,19 +1,19 @@
 import { SaxiosRequestConfig } from '../types';
 
 /**
- * Cache key oluşturan utility fonksiyon
+ * Builds a deterministic cache key from request config
  */
 export function createCacheKey(config: SaxiosRequestConfig): string {
   const method = (config.method || 'GET').toUpperCase();
   const url = config.url || '';
   
-  // URL'i normalize et
+  // Normalize URL
   let normalizedUrl = url;
   if (config.baseURL && !url.startsWith('http')) {
     normalizedUrl = config.baseURL.replace(/\/$/, '') + '/' + url.replace(/^\//, '');
   }
   
-  // Params'ı sırala ve serialize et
+  // Sort and serialize params
   let paramsString = '';
   if (config.params) {
     const sortedParams = Object.keys(config.params)
@@ -25,7 +25,7 @@ export function createCacheKey(config: SaxiosRequestConfig): string {
     paramsString = JSON.stringify(sortedParams);
   }
   
-  // Data'yı serialize et (sadece GET dışındaki metodlar için)
+  // Serialize body for non-GET methods
   let dataString = '';
   if (method !== 'GET' && config.data) {
     if (typeof config.data === 'object') {
@@ -39,7 +39,7 @@ export function createCacheKey(config: SaxiosRequestConfig): string {
     }
   }
   
-  // Headers'dan cache'i etkileyebilecek olanları al
+  // Headers that affect cache identity
   const relevantHeaders: Record<string, string> = {};
   if (config.headers) {
     const cacheRelevantHeaders = ['authorization', 'accept', 'content-type'];
@@ -53,13 +53,13 @@ export function createCacheKey(config: SaxiosRequestConfig): string {
     ? JSON.stringify(relevantHeaders) 
     : '';
   
-  // Cache key'i oluştur
+  // Assemble cache key
   const parts = [method, normalizedUrl, paramsString, dataString, headersString];
   return parts.filter(Boolean).join('|');
 }
 
 /**
- * HTTP metodunun cache'lenebilir olup olmadığını kontrol et
+ * Whether the HTTP method may be cached
  */
 export function isCacheableMethod(method: string): boolean {
   const cacheableMethods = ['GET', 'HEAD', 'OPTIONS'];
@@ -67,7 +67,7 @@ export function isCacheableMethod(method: string): boolean {
 }
 
 /**
- * HTTP status kodunun cache'lenebilir olup olmadığını kontrol et
+ * Whether the HTTP status may be cached
  */
 export function isCacheableStatus(status: number): boolean {
   const cacheableStatuses = [
@@ -88,7 +88,7 @@ export function isCacheableStatus(status: number): boolean {
 }
 
 /**
- * Cache TTL'yi hesapla (Cache-Control header'ından)
+ * Parse TTL from Cache-Control header
  */
 export function parseCacheControlTTL(headers: Record<string, any>): number | null {
   const cacheControl = headers['cache-control'] || headers['Cache-Control'];
@@ -97,44 +97,44 @@ export function parseCacheControlTTL(headers: Record<string, any>): number | nul
     return null;
   }
   
-  // max-age directive'ini ara
+  // Look for max-age directive
   const maxAgeMatch = cacheControl.match(/max-age=(\d+)/i);
   if (maxAgeMatch) {
-    return parseInt(maxAgeMatch[1], 10) * 1000; // saniyeyi milisaniyeye çevir
+    return parseInt(maxAgeMatch[1], 10) * 1000; // seconds to ms
   }
   
   return null;
 }
 
 /**
- * Response'un cache'lenebilir olup olmadığını kontrol et
+ * Whether the response may be stored in cache
  */
 export function isCacheableResponse(
   status: number, 
   headers: Record<string, any>, 
   method: string
 ): boolean {
-  // Method kontrolü
+  // Method check
   if (!isCacheableMethod(method)) {
     return false;
   }
   
-  // Status kontrolü
+  // Status check
   if (!isCacheableStatus(status)) {
     return false;
   }
   
-  // Cache-Control kontrolü
+  // Cache-Control check
   const cacheControl = headers['cache-control'] || headers['Cache-Control'];
   if (cacheControl && typeof cacheControl === 'string') {
     const lowerCacheControl = cacheControl.toLowerCase();
     
-    // no-cache veya no-store varsa cache'leme
+    // Do not cache when no-cache or no-store
     if (lowerCacheControl.includes('no-cache') || lowerCacheControl.includes('no-store')) {
       return false;
     }
     
-    // private varsa cache'leme (sadece browser cache'i için)
+    // private — skip client cache (browser semantics)
     if (lowerCacheControl.includes('private')) {
       return false;
     }
@@ -144,33 +144,33 @@ export function isCacheableResponse(
 }
 
 /**
- * Cache key'i hash'le (uzun key'ler için)
+ * Hash very long cache keys
  */
 export function hashCacheKey(key: string): string {
   if (key.length <= 250) {
-    return key; // Kısa key'leri olduğu gibi kullan
+    return key; // Short keys unchanged
   }
   
-  // Basit hash fonksiyonu
+  // Simple string hash
   let hash = 0;
   for (let i = 0; i < key.length; i++) {
     const char = key.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // 32-bit integer'a çevir
+    hash = hash & hash; // coerce to 32-bit int
   }
   
   return `hash_${Math.abs(hash).toString(36)}`;
 }
 
 /**
- * Cache entry'nin expired olup olmadığını kontrol et
+ * Whether a cache entry has expired
  */
 export function isCacheExpired(timestamp: number, ttl: number): boolean {
   return Date.now() - timestamp > ttl;
 }
 
 /**
- * Cache entry'nin stale olup olmadığını kontrol et
+ * Whether a cache entry is stale (revalidate window)
  */
 export function isCacheStale(timestamp: number, staleTtl: number): boolean {
   return Date.now() - timestamp > staleTtl;

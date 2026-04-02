@@ -1,7 +1,7 @@
 import { Cancel as ICancel, Canceler, CancelToken as ICancelToken, CancelTokenSource } from '../types';
 
 /**
- * Cancel sınıfı
+ * Cancellation reason (axios-compatible)
  */
 export class Cancel implements ICancel {
   public message: string;
@@ -16,7 +16,7 @@ export class Cancel implements ICancel {
 }
 
 /**
- * CancelToken sınıfı
+ * CancelToken (axios-compatible)
  */
 export class CancelToken implements ICancelToken {
   public promise: Promise<Cancel>;
@@ -44,7 +44,7 @@ export class CancelToken implements ICancelToken {
     if (executor) {
       executor((message?: string) => {
         if (this.reason) {
-          // Zaten cancel edilmiş
+          // Already canceled
           return;
         }
 
@@ -55,7 +55,7 @@ export class CancelToken implements ICancelToken {
   }
 
   /**
-   * Cancel edilmişse hata fırlatır
+   * Throws if cancellation was requested
    */
   public throwIfRequested(): void {
     if (this.reason) {
@@ -64,7 +64,7 @@ export class CancelToken implements ICancelToken {
   }
 
   /**
-   * Cancel listener ekler
+   * Subscribe to cancellation
    */
   public subscribe(listener: (cancel: Cancel) => void): void {
     if (this.reason) {
@@ -76,7 +76,7 @@ export class CancelToken implements ICancelToken {
   }
 
   /**
-   * Cancel listener kaldırır
+   * Unsubscribe a listener
    */
   public unsubscribe(listener: (cancel: Cancel) => void): void {
     const index = this._listeners.indexOf(listener);
@@ -86,7 +86,7 @@ export class CancelToken implements ICancelToken {
   }
 
   /**
-   * CancelTokenSource oluşturur
+   * Factory for token + cancel function
    */
   public static source(): CancelTokenSource {
     let cancel: Canceler;
@@ -102,7 +102,7 @@ export class CancelToken implements ICancelToken {
 }
 
 /**
- * Cancel olup olmadığını kontrol eden fonksiyon
+ * Type guard for Cancel
  */
 export function isCancel(value: any): value is Cancel {
   return value instanceof Cancel;

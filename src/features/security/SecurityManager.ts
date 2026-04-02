@@ -2,7 +2,7 @@ import { SecurityConfig } from '../types';
 import { SaxiosRequestConfig, SaxiosHeaders } from '../../types';
 
 /**
- * Security Manager - Güvenlik özellikleri
+ * Optional CSRF, signing, and redaction helpers
  */
 export class SecurityManager {
   private config: Required<SecurityConfig>;
@@ -25,14 +25,14 @@ export class SecurityManager {
   }
 
   /**
-   * Request'i güvenlik kontrollerinden geçir
+   * Apply enabled security transformations
    */
   async secureRequest(config: SaxiosRequestConfig): Promise<SaxiosRequestConfig> {
     if (!this.config.enabled) return config;
 
     let securedConfig = { ...config };
 
-    // Origin kontrolü
+    // Allowed origin list
     if (this.config.allowedOrigins.length > 0) {
       securedConfig = this.validateOrigin(securedConfig);
     }
@@ -83,7 +83,7 @@ export class SecurityManager {
   }
 
   /**
-   * CSRF token ekle
+   * Inject CSRF header
    */
   private addCSRFToken(config: SaxiosRequestConfig): SaxiosRequestConfig {
     if (!this.csrfToken) {
@@ -99,16 +99,15 @@ export class SecurityManager {
   }
 
   /**
-   * Request imzala
+   * Attach signature headers
    */
   private async signRequest(config: SaxiosRequestConfig): Promise<SaxiosRequestConfig> {
     const timestamp = Date.now().toString();
     const nonce = this.generateNonce();
     
-    // Signature payload oluştur
     const payload = this.createSignaturePayload(config, timestamp, nonce);
     
-    // Signature hesapla (gerçek implementasyonda HMAC-SHA256 kullanılır)
+    // Production code should use HMAC-SHA256
     const signature = await this.calculateSignature(payload);
 
     const headers: SaxiosHeaders = {
@@ -122,7 +121,7 @@ export class SecurityManager {
   }
 
   /**
-   * Sensitive data'yı şifrele
+   * Demo XOR on selected body fields
    */
   private encryptSensitiveData(config: SaxiosRequestConfig): SaxiosRequestConfig {
     if (!config.data || typeof config.data !== 'object') {
@@ -141,7 +140,7 @@ export class SecurityManager {
   }
 
   /**
-   * Header'ları sanitize et
+   * Redact configured sensitive headers
    */
   private sanitizeHeaders(config: SaxiosRequestConfig): SaxiosRequestConfig {
     if (!config.headers) return config;
@@ -152,7 +151,7 @@ export class SecurityManager {
       const lowerKey = key.toLowerCase();
       
       if (this.config.sanitizeHeaders.includes(lowerKey)) {
-        // Sensitive header'ı log'lama
+        // Replace with placeholder
         sanitizedHeaders[key] = '[REDACTED]';
       } else {
         sanitizedHeaders[key] = config.headers![key];
@@ -163,10 +162,10 @@ export class SecurityManager {
   }
 
   /**
-   * CSRF protection başlat
+   * Load CSRF token from DOM when available
    */
   private initCSRFProtection(): void {
-    // Meta tag'den CSRF token al
+    // `<meta name="csrf-token">`
     if (typeof document !== 'undefined') {
       const metaTag = document.querySelector('meta[name="csrf-token"]');
       if (metaTag) {
@@ -174,7 +173,7 @@ export class SecurityManager {
       }
     }
 
-    // Cookie'den CSRF token al
+    // Fallback: XSRF-TOKEN cookie
     if (typeof document !== 'undefined' && !this.csrfToken) {
       const cookies = document.cookie.split(';');
       for (const cookie of cookies) {
@@ -188,7 +187,7 @@ export class SecurityManager {
   }
 
   /**
-   * CSRF token oluştur
+   * Generate random CSRF token
    */
   private generateCSRFToken(): string {
     const array = new Uint8Array(32);
@@ -204,7 +203,7 @@ export class SecurityManager {
   }
 
   /**
-   * Nonce oluştur
+   * Random nonce for signing
    */
   private generateNonce(): string {
     return Math.random().toString(36).substring(2, 15) + 
@@ -212,7 +211,7 @@ export class SecurityManager {
   }
 
   /**
-   * Signature payload oluştur
+   * Canonical string for HMAC input
    */
   private createSignaturePayload(
     config: SaxiosRequestConfig, 
@@ -227,25 +226,22 @@ export class SecurityManager {
   }
 
   /**
-   * Signature hesapla
+   * Stub hash — replace with HMAC in production
    */
   private async calculateSignature(payload: string): Promise<string> {
-    // Gerçek implementasyonda HMAC-SHA256 kullanılır
-    // Şimdilik basit hash
     let hash = 0;
     for (let i = 0; i < payload.length; i++) {
       const char = payload.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // 32-bit integer'a çevir
+      hash = hash & hash; // 32-bit int
     }
     return Math.abs(hash).toString(16);
   }
 
   /**
-   * Basit şifreleme (gerçek implementasyonda AES kullanılır)
+   * Demo XOR — use AES-GCM in production
    */
   private encrypt(data: string): string {
-    // Basit XOR şifreleme (demo amaçlı)
     const key = 'saxios-security-key';
     let encrypted = '';
     
@@ -259,21 +255,21 @@ export class SecurityManager {
   }
 
   /**
-   * CSRF token'ı manuel set et
+   * Manually set CSRF token
    */
   setCSRFToken(token: string): void {
     this.csrfToken = token;
   }
 
   /**
-   * CSRF token'ı al
+   * Current CSRF token if any
    */
   getCSRFToken(): string | undefined {
     return this.csrfToken;
   }
 
   /**
-   * Konfigürasyonu güncelle
+   * Merge partial security config
    */
   updateConfig(newConfig: Partial<SecurityConfig>): void {
     Object.assign(this.config, newConfig);
@@ -284,21 +280,21 @@ export class SecurityManager {
   }
 
   /**
-   * Security'yi etkinleştir
+   * Enable security pipeline
    */
   enable(): void {
     this.config.enabled = true;
   }
 
   /**
-   * Security'yi devre dışı bırak
+   * Disable security pipeline
    */
   disable(): void {
     this.config.enabled = false;
   }
 
   /**
-   * Etkin mi kontrol et
+   * Whether security pipeline is enabled
    */
   isEnabled(): boolean {
     return this.config.enabled;

@@ -1,19 +1,19 @@
 import saxios from '../src';
 
-// Temel kullanım örnekleri
+// Basic usage examples
 
 async function basicExamples() {
   try {
     // GET request
     console.log('=== GET Request ===');
     const users = await saxios.get('https://jsonplaceholder.typicode.com/users');
-    console.log('Users:', users.data.slice(0, 2)); // İlk 2 kullanıcı
+    console.log('Users:', users.data.slice(0, 2)); // First two users
 
     // POST request
     console.log('\n=== POST Request ===');
     const newPost = await saxios.post('https://jsonplaceholder.typicode.com/posts', {
       title: 'saxios Test Post',
-      body: 'Bu saxios ile oluşturulmuş bir test post\'u',
+      body: 'Test post created with saxios',
       userId: 1
     });
     console.log('New Post:', newPost.data);
@@ -22,8 +22,8 @@ async function basicExamples() {
     console.log('\n=== PUT Request ===');
     const updatedPost = await saxios.put('https://jsonplaceholder.typicode.com/posts/1', {
       id: 1,
-      title: 'Güncellenmiş Post',
-      body: 'Bu post saxios ile güncellendi',
+      title: 'Updated Post',
+      body: 'This post was updated with saxios',
       userId: 1
     });
     console.log('Updated Post:', updatedPost.data);
@@ -38,7 +38,7 @@ async function basicExamples() {
   }
 }
 
-// Instance kullanımı
+// Instance usage
 async function instanceExample() {
   console.log('\n=== Instance Example ===');
   
@@ -59,7 +59,7 @@ async function instanceExample() {
   }
 }
 
-// Interceptor örneği
+// Interceptors
 async function interceptorExample() {
   console.log('\n=== Interceptor Example ===');
   
@@ -70,7 +70,7 @@ async function interceptorExample() {
   // Request interceptor
   api.interceptors.request.use(
     (config) => {
-      console.log('Request gönderiliyor:', config.method?.toUpperCase(), config.url);
+      console.log('Sending request:', config.method?.toUpperCase(), config.url);
       config.headers = {
         ...config.headers,
         'X-Request-Time': new Date().toISOString()
@@ -86,7 +86,7 @@ async function interceptorExample() {
   // Response interceptor
   api.interceptors.response.use(
     (response) => {
-      console.log('Response alındı:', response.status, response.statusText);
+      console.log('Response received:', response.status, response.statusText);
       return response;
     },
     (error) => {
@@ -103,12 +103,12 @@ async function interceptorExample() {
   }
 }
 
-// Error handling örneği
+// Error handling
 async function errorHandlingExample() {
   console.log('\n=== Error Handling Example ===');
   
   try {
-    // Var olmayan endpoint
+    // Non-existent endpoint
     await saxios.get('https://jsonplaceholder.typicode.com/nonexistent');
   } catch (error) {
     if (saxios.isSaxiosError(error)) {
@@ -122,15 +122,15 @@ async function errorHandlingExample() {
   }
 }
 
-// Cancel token örneği
+// Cancel token
 async function cancelTokenExample() {
   console.log('\n=== Cancel Token Example ===');
   
   const source = saxios.CancelToken.source();
   
-  // 2 saniye sonra cancel et
+  // Cancel after 2 seconds
   setTimeout(() => {
-    source.cancel('İşlem 2 saniye sonra iptal edildi');
+    source.cancel('Cancelled after 2 seconds');
   }, 2000);
 
   try {
@@ -147,7 +147,7 @@ async function cancelTokenExample() {
   }
 }
 
-// Cache örneği
+// Cache
 async function cacheExample() {
   console.log('\n=== Cache Example ===');
   
@@ -155,7 +155,7 @@ async function cacheExample() {
     baseURL: 'https://jsonplaceholder.typicode.com',
     cache: {
       enabled: true,
-      ttl: 30000, // 30 saniye cache
+      ttl: 30000, // 30 second TTL
       maxSize: 50
     }
   });
@@ -171,7 +171,6 @@ async function cacheExample() {
     console.timeEnd('Second request (cache hit)');
     console.log('Second response title:', response2.data.title);
 
-    // Cache istatistikleri
     const stats = api.cache.getStats();
     console.log('Cache Stats:', {
       hits: stats.hits,
@@ -180,7 +179,6 @@ async function cacheExample() {
       size: stats.size
     });
 
-    // Cache'i temizle
     await api.cache.clear();
     console.log('Cache cleared');
 
@@ -189,35 +187,31 @@ async function cacheExample() {
   }
 }
 
-// Performance karşılaştırması
+// Performance comparison
 async function performanceComparison() {
   console.log('\n=== Performance Comparison ===');
   
-  // Cache'siz instance
   const noCacheApi = saxios.create({
     baseURL: 'https://jsonplaceholder.typicode.com',
     cache: false
   });
 
-  // Cache'li instance
   const cacheApi = saxios.create({
     baseURL: 'https://jsonplaceholder.typicode.com',
     cache: true
   });
 
   try {
-    // Cache'siz performans
     console.time('No Cache - 3 requests');
     await noCacheApi.get('/posts/1');
     await noCacheApi.get('/posts/1');
     await noCacheApi.get('/posts/1');
     console.timeEnd('No Cache - 3 requests');
 
-    // Cache'li performans
     console.time('With Cache - 3 requests');
-    await cacheApi.get('/posts/1'); // Cache miss
-    await cacheApi.get('/posts/1'); // Cache hit
-    await cacheApi.get('/posts/1'); // Cache hit
+    await cacheApi.get('/posts/1'); // miss
+    await cacheApi.get('/posts/1'); // hit
+    await cacheApi.get('/posts/1'); // hit
     console.timeEnd('With Cache - 3 requests');
 
     const stats = cacheApi.cache.getStats();
@@ -232,7 +226,7 @@ async function performanceComparison() {
   }
 }
 
-// Tüm örnekleri çalıştır
+// Run all examples
 async function runExamples() {
   console.log('🚀 Saxios Examples Starting...\n');
   
@@ -247,7 +241,7 @@ async function runExamples() {
   console.log('\n✅ All examples completed!');
 }
 
-// Node.js ortamında çalıştır
+// Run when executed directly under Node
 if (require.main === module) {
   runExamples().catch(console.error);
 }

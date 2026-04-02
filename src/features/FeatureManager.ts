@@ -11,7 +11,7 @@ import { BatchingManager } from './batching/BatchingManager';
 import { LoggingManager } from './logging/LoggingManager';
 
 /**
- * Feature Manager - Tüm özellikleri yöneten ana sınıf
+ * Coordinates optional features (retry, dedup, analytics, etc.)
  */
 export class FeatureManager {
   private config: SaxiosFeaturesConfig;
@@ -29,7 +29,7 @@ export class FeatureManager {
   constructor(config: SaxiosFeaturesConfig = {}) {
     this.config = config;
 
-    // Feature manager'ları başlat
+    // Initialize feature managers
     this.retry = new RetryManager(config.retry);
     this.deduplication = new DeduplicationManager(config.deduplication);
     this.analytics = new AnalyticsManager(config.analytics);
@@ -40,7 +40,7 @@ export class FeatureManager {
   }
 
   /**
-   * Request'i tüm feature'lardan geçir
+   * Run a request through the feature pipeline
    */
   async processRequest<T = any>(
     config: SaxiosRequestConfig,
@@ -56,13 +56,13 @@ export class FeatureManager {
       // Security processing
       let processedConfig = await this.security.secureRequest(config);
 
-      // Deduplication key oluştur
+      // Build deduplication key
       const dedupKey = this.deduplication.generateKey(processedConfig);
 
       // Analytics: request start
       const metricId = this.analytics.trackRequestStart(processedConfig);
 
-      // Request'i feature pipeline'dan geçir
+      // Execute through feature stack
       const response = await this.executeWithFeatures(
         processedConfig,
         requestFn,
@@ -102,7 +102,7 @@ export class FeatureManager {
   }
 
   /**
-   * Request'i feature'larla execute et
+   * Compose offline → batching → dedup → retry
    */
   private async executeWithFeatures<T>(
     config: SaxiosRequestConfig,
@@ -131,21 +131,21 @@ export class FeatureManager {
   }
 
   /**
-   * Event listener ekle
+   * Subscribe to lifecycle events
    */
   on<K extends keyof SaxiosEvents>(event: K, listener: SaxiosEvents[K]): void {
     this.eventListeners[event] = listener;
   }
 
   /**
-   * Event listener kaldır
+   * Unsubscribe from an event
    */
   off<K extends keyof SaxiosEvents>(event: K): void {
     delete this.eventListeners[event];
   }
 
   /**
-   * Event emit et
+   * Emit a lifecycle event
    */
   private emit<K extends keyof SaxiosEvents>(
     event: K, 
@@ -158,7 +158,7 @@ export class FeatureManager {
   }
 
   /**
-   * Tüm feature'ların durumunu al
+   * Snapshot of enabled features and stats
    */
   getFeatureStatus(): {
     retry: { enabled: boolean; config: any };
@@ -201,12 +201,12 @@ export class FeatureManager {
   }
 
   /**
-   * Konfigürasyonu güncelle
+   * Update feature configuration
    */
   updateConfig(newConfig: Partial<SaxiosFeaturesConfig>): void {
     Object.assign(this.config, newConfig);
 
-    // Her feature'ın konfigürasyonunu güncelle
+    // Propagate to sub-managers
     if (newConfig.retry) {
       this.retry.updateConfig(newConfig.retry);
     }
@@ -231,7 +231,7 @@ export class FeatureManager {
   }
 
   /**
-   * Tüm feature'ları etkinleştir
+   * Enable every feature module
    */
   enableAll(): void {
     this.retry.enable();
@@ -244,7 +244,7 @@ export class FeatureManager {
   }
 
   /**
-   * Tüm feature'ları devre dışı bırak
+   * Disable every feature module
    */
   disableAll(): void {
     this.retry.disable();
@@ -257,7 +257,7 @@ export class FeatureManager {
   }
 
   /**
-   * Temizlik yap
+   * Tear down listeners and child managers
    */
   destroy(): void {
     this.deduplication.destroy();

@@ -215,7 +215,7 @@ export interface SaxiosInstance extends SaxiosCallable {
   patchForm<T = any, R = SaxiosResponse<T>, D = any>(url: string, data?: D, config?: SaxiosRequestConfig<D>): Promise<R>;
 }
 
-/** Çağrılabilir HTTP istemcisi imzası (varsayılan export `saxios` ile eşleşir) */
+/** Callable HTTP client signature (matches default export `saxios`) */
 export interface SaxiosCallable {
   <T = any, R = SaxiosResponse<T>, D = any>(config: SaxiosRequestConfig<D>): Promise<R>;
   <T = any, R = SaxiosResponse<T>, D = any>(url: string, config?: SaxiosRequestConfig<D>): Promise<R>;
@@ -248,5 +248,5 @@ export interface GenericHTMLFormElement {
   submit(): void;
 }
 
-// Default export type - sadece tip tanımı
+// Default export type — type-only stub
 export default {} as SaxiosStatic;

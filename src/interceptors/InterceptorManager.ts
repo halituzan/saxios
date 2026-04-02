@@ -8,13 +8,13 @@ interface InterceptorHandler<V> {
 }
 
 /**
- * Interceptor Manager sınıfı
+ * Interceptor chain manager
  */
 export class InterceptorManager<V> implements SaxiosInterceptorManager<V> {
   private handlers: Array<InterceptorHandler<V> | null> = [];
 
   /**
-   * Interceptor ekler
+   * Register an interceptor
    */
   public use<T = V>(
     onFulfilled?: (value: V) => T | Promise<T>,
@@ -35,7 +35,7 @@ export class InterceptorManager<V> implements SaxiosInterceptorManager<V> {
   }
 
   /**
-   * Interceptor kaldırır
+   * Remove an interceptor by id
    */
   public eject(id: number): void {
     if (this.handlers[id]) {
@@ -44,14 +44,14 @@ export class InterceptorManager<V> implements SaxiosInterceptorManager<V> {
   }
 
   /**
-   * Tüm interceptorları temizler
+   * Clear all interceptors
    */
   public clear(): void {
     this.handlers = [];
   }
 
   /**
-   * Interceptorları forEach ile dolaşır
+   * Iterate active handlers
    */
   public forEach(fn: (handler: InterceptorHandler<V>) => void): void {
     this.handlers.forEach((handler) => {
@@ -62,7 +62,7 @@ export class InterceptorManager<V> implements SaxiosInterceptorManager<V> {
   }
 
   /**
-   * Handlers'ı döndürür
+   * Raw handler list (may contain null slots)
    */
   public getHandlers(): Array<InterceptorHandler<V> | null> {
     return this.handlers;
@@ -70,7 +70,7 @@ export class InterceptorManager<V> implements SaxiosInterceptorManager<V> {
 }
 
 /**
- * Interceptorları çalıştıran fonksiyon
+ * Run fulfilled interceptors in order
  */
 export async function runInterceptors<T>(
   interceptors: InterceptorManager<T>,
@@ -80,7 +80,7 @@ export async function runInterceptors<T>(
   let result = value;
   const handlers = interceptors.getHandlers();
 
-  // Request interceptorları ters sırada çalışır
+  // Request interceptors run in reverse registration order (axios behavior)
   const orderedHandlers = isRequest ? handlers.slice().reverse() : handlers;
 
   for (const handler of orderedHandlers) {
@@ -113,7 +113,7 @@ export async function runInterceptors<T>(
 }
 
 /**
- * Error interceptorları çalıştıran fonksiyon
+ * Run response error interceptors
  */
 export async function runErrorInterceptors<T>(
   interceptors: InterceptorManager<T>,
@@ -128,7 +128,7 @@ export async function runErrorInterceptors<T>(
           ? handler.rejected(error)
           : await Promise.resolve(handler.rejected(error));
         
-        // Eğer handler error'ı handle etti ve yeni bir değer döndürdü
+        // If handler converted error to a new value, propagate as throw
         if (result !== undefined) {
           throw result;
         }

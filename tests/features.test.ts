@@ -24,7 +24,7 @@ describe('saxios Advanced Features', () => {
         }
       });
 
-      // İlk iki call fail, üçüncü success
+      // First two calls fail, third succeeds
       mockFetch
         .mockRejectedValueOnce(new Error('Network Error'))
         .mockRejectedValueOnce(new Error('Network Error'))
@@ -74,7 +74,7 @@ describe('saxios Advanced Features', () => {
         text: () => Promise.resolve('{"data": "test"}')
       } as Response);
 
-      // Aynı anda 3 aynı request gönder
+      // Three concurrent identical GETs
       const promises = [
         instance.get('https://api.example.com/users'),
         instance.get('https://api.example.com/users'),
@@ -83,12 +83,11 @@ describe('saxios Advanced Features', () => {
 
       const responses = await Promise.all(promises);
 
-      // Hepsi aynı response'u almalı
+      // All share the same payload
       responses.forEach(response => {
         expect(response.data).toEqual({ data: 'test' });
       });
 
-      // Sadece bir fetch call'u olmalı
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
@@ -113,7 +112,7 @@ describe('saxios Advanced Features', () => {
 
       expect(analyticsManager.isEnabled()).toBe(true);
 
-      // Request start track et
+      // Track start
       const metricId = analyticsManager.trackRequestStart({
         url: '/test',
         method: 'GET'
@@ -121,9 +120,9 @@ describe('saxios Advanced Features', () => {
 
       expect(metricId).toBeTruthy();
 
-      // Analytics al
+      // Snapshot before completion
       const analytics = analyticsManager.getAnalytics();
-      expect(analytics.totalRequests).toBe(0); // Henüz complete olmadı
+      expect(analytics.totalRequests).toBe(0); // not completed yet
     });
   });
 
@@ -186,15 +185,14 @@ describe('saxios Advanced Features', () => {
       const loggingManager = new LoggingManager({
         enabled: true,
         level: 'debug',
-        logToConsole: false // Test ortamında console'a log atma
+        logToConsole: false // silence console in tests
       });
 
       expect(loggingManager.isEnabled()).toBe(true);
 
-      // Custom log
+      // Custom entry
       loggingManager.logCustom('info', 'Test log message', { test: true });
 
-      // Log'ları al
       const logs = loggingManager.getLogs();
       expect(logs.length).toBe(1);
       expect(logs[0].message).toBe('Test log message');
@@ -204,17 +202,17 @@ describe('saxios Advanced Features', () => {
     it('should respect log levels', () => {
       const loggingManager = new LoggingManager({
         enabled: true,
-        level: 'warn', // Sadece warn ve error log'ları
+        level: 'warn', // only warn and error
         logToConsole: false
       });
 
-      loggingManager.logCustom('debug', 'Debug message'); // Loglanmamalı
-      loggingManager.logCustom('info', 'Info message');   // Loglanmamalı
-      loggingManager.logCustom('warn', 'Warning message'); // Loglanmalı
-      loggingManager.logCustom('error', 'Error message');  // Loglanmalı
+      loggingManager.logCustom('debug', 'Debug message'); // filtered out
+      loggingManager.logCustom('info', 'Info message');   // filtered out
+      loggingManager.logCustom('warn', 'Warning message'); // kept
+      loggingManager.logCustom('error', 'Error message');  // kept
 
       const logs = loggingManager.getLogs();
-      expect(logs.length).toBe(2); // Sadece warn ve error
+      expect(logs.length).toBe(2);
       expect(logs[0].level).toBe('warn');
       expect(logs[1].level).toBe('error');
     });
@@ -234,7 +232,7 @@ describe('saxios Advanced Features', () => {
         }
       });
 
-      // Tüm feature'ların etkin olduğunu kontrol et
+      // Every module should report enabled
       const status = instance.features.getFeatureStatus();
       expect(status.retry.enabled).toBe(true);
       expect(status.deduplication.enabled).toBe(true);
@@ -254,7 +252,7 @@ describe('saxios Advanced Features', () => {
 
       expect(instance.features.retry.isEnabled()).toBe(false);
 
-      // Konfigürasyonu güncelle
+      // Hot-update config
       instance.features.updateConfig({
         retry: { enabled: true, attempts: 5 }
       });
@@ -266,14 +264,12 @@ describe('saxios Advanced Features', () => {
     it('should enable/disable all features', () => {
       const instance = saxios.create();
 
-      // Tüm feature'ları etkinleştir
       instance.features.enableAll();
       
       const statusEnabled = instance.features.getFeatureStatus();
       expect(statusEnabled.retry.enabled).toBe(true);
       expect(statusEnabled.analytics.enabled).toBe(true);
 
-      // Tüm feature'ları devre dışı bırak
       instance.features.disableAll();
       
       const statusDisabled = instance.features.getFeatureStatus();
@@ -293,7 +289,7 @@ describe('saxios Advanced Features', () => {
       let requestStarted = false;
       let requestEnded = false;
 
-      // Event listener'ları ekle
+      // Wire lifecycle hooks
       instance.features.on('request:start', () => {
         requestStarted = true;
       });
@@ -311,7 +307,7 @@ describe('saxios Advanced Features', () => {
         text: () => Promise.resolve('{}')
       } as Response);
 
-      // Request gönder ve event'lerin tetiklendiğini kontrol et
+      // Fire request and assert hooks ran
       return instance.get('https://api.example.com/test').then(() => {
         expect(requestStarted).toBe(true);
         expect(requestEnded).toBe(true);

@@ -52,7 +52,7 @@ const DEFAULT_TRANSFORMERS = {
         try {
           return JSON.parse(data);
         } catch (e) {
-          // JSON parse edilemezse string olarak döndür
+          // If JSON parse fails, return the string as-is
         }
       }
       return data;
@@ -82,7 +82,7 @@ const DEFAULT_HEADERS = {
 };
 
 /**
- * Ana Saxios sınıfı
+ * Main Saxios class
  */
 export class Saxios {
   public defaults: SaxiosRequestConfig;
@@ -116,7 +116,7 @@ export class Saxios {
       response: new InterceptorManager<SaxiosResponse>()
     };
 
-    // Cache manager'ı başlat
+    // Initialize cache manager
     const cacheConfig = instanceConfig?.cache;
     if (cacheConfig) {
       if (typeof cacheConfig === 'boolean' && cacheConfig) {
@@ -130,21 +130,21 @@ export class Saxios {
       this.cache = new CacheManager({ enabled: false });
     }
 
-    // Global cache manager'ı ayarla
+    // Set global cache manager
     setGlobalCacheManager(this.cache);
 
-    // Feature manager'ı başlat
+    // Initialize feature manager
     this.features = new FeatureManager(instanceConfig?.features);
   }
 
   /**
-   * Request gönderen ana fonksiyon
+   * Main function that sends a request
    */
   public async request<T = any, R = SaxiosResponse<T>, D = any>(
     configOrUrl: SaxiosRequestConfig<D> | string,
     config?: SaxiosRequestConfig<D>
   ): Promise<R> {
-    // Config'i normalize et
+    // Normalize config
     let mergedConfig: SaxiosRequestConfig<D>;
     
     if (isString(configOrUrl)) {
@@ -153,33 +153,33 @@ export class Saxios {
       mergedConfig = mergeConfig(this.defaults, configOrUrl);
     }
 
-    // Method'u normalize et
+    // Normalize method
     if (mergedConfig.method) {
       mergedConfig.method = mergedConfig.method.toLowerCase() as Method;
     } else {
       mergedConfig.method = 'get';
     }
 
-    // Headers'ı merge et
+    // Merge headers
     mergedConfig.headers = this.mergeHeaders(mergedConfig);
 
-    // URL'i oluştur
+    // Build URL
     mergedConfig.url = buildFullPath(mergedConfig.baseURL, mergedConfig.url);
 
     try {
-      // Request interceptorları çalıştır
+      // Run request interceptors
       const processedConfig = await runInterceptors(
         this.interceptors.request, 
         mergedConfig, 
         true
       );
 
-      // Cancel token kontrolü
+      // Cancel token check
       if (processedConfig.cancelToken) {
         processedConfig.cancelToken.throwIfRequested();
       }
 
-      // Request transformerları uygula
+      // Apply request transformers
       if (processedConfig.transformRequest && processedConfig.data !== undefined) {
         const transformers = Array.isArray(processedConfig.transformRequest) 
           ? processedConfig.transformRequest 
@@ -198,7 +198,7 @@ export class Saxios {
 
       let response = await this.features.processRequest(processedConfig, () => adapter(processedConfig));
 
-      // Response transformerları uygula
+      // Apply response transformers
       if (response.data !== undefined && processedConfig.transformResponse) {
         const transformers = Array.isArray(processedConfig.transformResponse) 
           ? processedConfig.transformResponse 
@@ -209,14 +209,14 @@ export class Saxios {
         });
       }
 
-      // Response interceptorları çalıştır
+      // Run response interceptors
       response = await runInterceptors(this.interceptors.response, response, false);
 
       return response as R;
 
     } catch (error: any) {
       try {
-        // Error interceptorları çalıştır
+        // Run error interceptors
         const processedError = await runErrorInterceptors(this.interceptors.response, error);
         return processedError;
       } catch (finalError) {
@@ -359,7 +359,7 @@ export class Saxios {
   }
 
   /**
-   * URI oluşturan fonksiyon
+   * Builds the request URI
    */
   public getUri(config?: SaxiosRequestConfig): string {
     const mergedConfig = mergeConfig(this.defaults, config || {});
@@ -367,26 +367,26 @@ export class Saxios {
   }
 
   /**
-   * Headers'ı merge eden yardımcı fonksiyon
+   * Merges headers for the request
    */
   private mergeHeaders(config: SaxiosRequestConfig): SaxiosHeaders {
     const method = config.method || 'get';
     const headers: SaxiosHeaders = {};
 
-    // Common headers'ı ekle
+    // Add common headers
     Object.assign(headers, this.defaults.headers?.common || {});
 
-    // Method specific headers'ı ekle
+    // Add method-specific headers
     if (this.defaults.headers && this.defaults.headers[method]) {
       Object.assign(headers, this.defaults.headers[method]);
     }
 
-    // Instance headers'ı ekle
+    // Add instance headers
     if (this.defaults.headers) {
       Object.assign(headers, this.defaults.headers);
     }
 
-    // Config headers'ı ekle
+    // Add config headers
     if (config.headers) {
       Object.assign(headers, config.headers);
     }

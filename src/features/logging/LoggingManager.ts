@@ -12,7 +12,7 @@ interface LogEntry {
 }
 
 /**
- * Logging Manager - Gelişmiş logging ve debugging
+ * Structured request/response logging with redaction
  */
 export class LoggingManager {
   private config: Required<LoggingConfig>;
@@ -32,7 +32,7 @@ export class LoggingManager {
   }
 
   /**
-   * Request başlangıcını logla
+   * Log outgoing request; returns request id
    */
   logRequestStart(config: SaxiosRequestConfig): string {
     if (!this.shouldLog('debug')) return '';
@@ -62,7 +62,7 @@ export class LoggingManager {
   }
 
   /**
-   * Request bitişini logla
+   * Log successful response
    */
   logRequestEnd(
     requestId: string,
@@ -92,7 +92,7 @@ export class LoggingManager {
   }
 
   /**
-   * Request hatasını logla
+   * Log failed request
    */
   logRequestError(
     requestId: string,
@@ -122,7 +122,7 @@ export class LoggingManager {
   }
 
   /**
-   * Retry'ı logla
+   * Log retry attempt
    */
   logRetry(requestId: string, config: SaxiosRequestConfig, attemptNumber: number): void {
     if (!this.shouldLog('info')) return;
@@ -138,7 +138,7 @@ export class LoggingManager {
   }
 
   /**
-   * Cache hit/miss logla
+   * Log cache events
    */
   logCacheEvent(requestId: string, config: SaxiosRequestConfig, event: 'hit' | 'miss' | 'set'): void {
     if (!this.shouldLog('debug')) return;
@@ -155,7 +155,7 @@ export class LoggingManager {
   }
 
   /**
-   * Custom log
+   * Ad-hoc log line
    */
   logCustom(level: LogLevel, message: string, data?: any): void {
     if (!this.shouldLog(level)) return;
@@ -163,7 +163,7 @@ export class LoggingManager {
   }
 
   /**
-   * Ana log fonksiyonu
+   * Internal sink: memory ring + console + optional file hook
    */
   private log(level: LogLevel, message: string, data?: any): void {
     if (!this.config.enabled || !this.shouldLog(level)) return;
@@ -176,32 +176,28 @@ export class LoggingManager {
       requestId: data?.requestId
     };
 
-    // Log'u kaydet
     this.logs.push(logEntry);
 
-    // Console'a logla
     if (this.config.logToConsole) {
       this.logToConsole(logEntry);
     }
 
-    // Custom logger
     if (this.config.customLogger) {
       this.config.customLogger(level, message, data);
     }
 
-    // File'a logla (browser'da çalışmaz)
+    // Optional file sink (Node)
     if (this.config.logToFile && typeof process !== 'undefined') {
       this.logToFile(logEntry);
     }
 
-    // Log history'yi sınırla
     if (this.logs.length > 1000) {
-      this.logs = this.logs.slice(-500); // Son 500 log'u tut
+      this.logs = this.logs.slice(-500);
     }
   }
 
   /**
-   * Console'a logla
+   * Format entry for console
    */
   private logToConsole(entry: LogEntry): void {
     const timestamp = new Date(entry.timestamp).toISOString();
@@ -227,16 +223,15 @@ export class LoggingManager {
   }
 
   /**
-   * File'a logla (Node.js ortamında)
+   * Placeholder for fs append (Node)
    */
   private logToFile(_entry: LogEntry): void {
-    // Bu kısım Node.js fs modülü ile implement edilecek
-    // Browser ortamında çalışmaz
+    // Not implemented — browsers have no filesystem API here
     console.log('File logging not implemented for browser environment');
   }
 
   /**
-   * Log level kontrolü
+   * Compare configured level vs message level
    */
   private shouldLog(level: LogLevel): boolean {
     const levels: LogLevel[] = ['silent', 'error', 'warn', 'info', 'debug', 'verbose'];
@@ -247,7 +242,7 @@ export class LoggingManager {
   }
 
   /**
-   * Headers'ı sanitize et
+   * Redact sensitive headers
    */
   private sanitizeHeaders(headers: any): any {
     const sensitiveHeaders = ['authorization', 'cookie', 'x-api-key', 'x-auth-token'];
@@ -266,7 +261,7 @@ export class LoggingManager {
   }
 
   /**
-   * Body'yi sanitize et
+   * Truncate / redact body fields
    */
   private sanitizeBody(body: any): any {
     if (!body) return body;
@@ -295,14 +290,14 @@ export class LoggingManager {
   }
 
   /**
-   * Request ID oluştur
+   * Monotonic request id
    */
   private generateRequestId(): string {
     return `req_${++this.requestCounter}_${Date.now().toString(36)}`;
   }
 
   /**
-   * Log history'yi al
+   * Filtered log buffer
    */
   getLogs(filter?: {
     level?: LogLevel;
@@ -334,14 +329,14 @@ export class LoggingManager {
   }
 
   /**
-   * Log'ları temizle
+   * Clear in-memory history
    */
   clearLogs(): void {
     this.logs = [];
   }
 
   /**
-   * Log istatistikleri
+   * Simple histogram by level
    */
   getLogStats(): {
     total: number;
@@ -371,28 +366,28 @@ export class LoggingManager {
   }
 
   /**
-   * Konfigürasyonu güncelle
+   * Merge partial config
    */
   updateConfig(newConfig: Partial<LoggingConfig>): void {
     Object.assign(this.config, newConfig);
   }
 
   /**
-   * Logging'i etkinleştir
+   * Enable logging
    */
   enable(): void {
     this.config.enabled = true;
   }
 
   /**
-   * Logging'i devre dışı bırak
+   * Disable logging
    */
   disable(): void {
     this.config.enabled = false;
   }
 
   /**
-   * Etkin mi kontrol et
+   * Whether logging is enabled
    */
   isEnabled(): boolean {
     return this.config.enabled;

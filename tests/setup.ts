@@ -1,4 +1,4 @@
-// Jest setup dosyası
+// Jest setup
 
 // Global fetch mock
 global.fetch = jest.fn();

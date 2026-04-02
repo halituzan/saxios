@@ -202,7 +202,7 @@ describe('saxios', () => {
     it('should cancel request with cancel token', async () => {
       const source = CancelToken.source();
       
-      // Cancel hemen
+      // Cancel immediately
       source.cancel('Operation canceled');
 
       try {
