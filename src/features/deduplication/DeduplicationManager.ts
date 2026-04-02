@@ -1,13 +1,13 @@
 import { DeduplicationConfig } from '../types';
-import { LaxiosRequestConfig, LaxiosResponse } from '../../types';
+import { SaxiosRequestConfig, SaxiosResponse } from '../../types';
 
 interface PendingRequest<T = any> {
-  promise: Promise<LaxiosResponse<T>>;
+  promise: Promise<SaxiosResponse<T>>;
   timestamp: number;
-  resolve: (value: LaxiosResponse<T>) => void;
+  resolve: (value: SaxiosResponse<T>) => void;
   reject: (error: any) => void;
   subscribers: Array<{
-    resolve: (value: LaxiosResponse<T>) => void;
+    resolve: (value: SaxiosResponse<T>) => void;
     reject: (error: any) => void;
   }>;
 }
@@ -37,8 +37,8 @@ export class DeduplicationManager {
    */
   async deduplicate<T = any>(
     key: string,
-    requestFn: () => Promise<LaxiosResponse<T>>
-  ): Promise<LaxiosResponse<T>> {
+    requestFn: () => Promise<SaxiosResponse<T>>
+  ): Promise<SaxiosResponse<T>> {
     if (!this.config.enabled) {
       return requestFn();
     }
@@ -48,13 +48,13 @@ export class DeduplicationManager {
 
     if (existingRequest) {
       // Mevcut request'e subscribe ol
-      return new Promise<LaxiosResponse<T>>((resolve, reject) => {
+      return new Promise<SaxiosResponse<T>>((resolve, reject) => {
         existingRequest.subscribers.push({ resolve, reject });
       });
     }
 
     // Yeni request oluştur
-    return new Promise<LaxiosResponse<T>>((resolve, reject) => {
+    return new Promise<SaxiosResponse<T>>((resolve, reject) => {
       const pendingRequest: PendingRequest<T> = {
         promise: requestFn(),
         timestamp: Date.now(),
@@ -93,14 +93,14 @@ export class DeduplicationManager {
   /**
    * Request key oluştur
    */
-  generateKey(config: LaxiosRequestConfig): string {
+  generateKey(config: SaxiosRequestConfig): string {
     return this.config.keyGenerator(config);
   }
 
   /**
    * Default key generator
    */
-  private defaultKeyGenerator(config: LaxiosRequestConfig): string {
+  private defaultKeyGenerator(config: SaxiosRequestConfig): string {
     const method = (config.method || 'GET').toUpperCase();
     const url = config.url || '';
     const params = config.params ? JSON.stringify(config.params) : '';

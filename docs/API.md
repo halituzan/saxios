@@ -1,4 +1,4 @@
-# Laxios API Dokümantasyonu
+# saxios API Dokümantasyonu
 
 ## İçindekiler
 
@@ -15,22 +15,22 @@
 ## Kurulum
 
 ```bash
-npm install laxios
+npm install saxios
 ```
 
 ## Temel Kullanım
 
 ### GET Request
 ```typescript
-import laxios from 'laxios';
+import saxios from 'saxios';
 
-const response = await laxios.get('/users');
+const response = await saxios.get('/users');
 console.log(response.data);
 ```
 
 ### POST Request
 ```typescript
-const response = await laxios.post('/users', {
+const response = await saxios.post('/users', {
   name: 'John Doe',
   email: 'john@example.com'
 });
@@ -38,17 +38,17 @@ const response = await laxios.post('/users', {
 
 ### Diğer HTTP Metodları
 ```typescript
-await laxios.put('/users/1', userData);
-await laxios.patch('/users/1', partialData);
-await laxios.delete('/users/1');
-await laxios.head('/users');
-await laxios.options('/users');
+await saxios.put('/users/1', userData);
+await saxios.patch('/users/1', partialData);
+await saxios.delete('/users/1');
+await saxios.head('/users');
+await saxios.options('/users');
 ```
 
 ## Instance Oluşturma
 
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   baseURL: 'https://api.example.com',
   timeout: 5000,
   headers: {
@@ -60,11 +60,11 @@ const api = laxios.create({
 ## Request Konfigürasyonu
 
 ```typescript
-interface LaxiosRequestConfig {
+interface SaxiosRequestConfig {
   url?: string;
   method?: Method;
   baseURL?: string;
-  headers?: LaxiosHeaders;
+  headers?: SaxiosHeaders;
   params?: any;
   data?: any;
   timeout?: number;
@@ -75,20 +75,20 @@ interface LaxiosRequestConfig {
   maxBodyLength?: number;
   cancelToken?: CancelToken;
   signal?: AbortSignal;
-  onUploadProgress?: (progressEvent: LaxiosProgressEvent) => void;
-  onDownloadProgress?: (progressEvent: LaxiosProgressEvent) => void;
+  onUploadProgress?: (progressEvent: SaxiosProgressEvent) => void;
+  onDownloadProgress?: (progressEvent: SaxiosProgressEvent) => void;
 }
 ```
 
 ## Response Schema
 
 ```typescript
-interface LaxiosResponse<T = any> {
+interface SaxiosResponse<T = any> {
   data: T;
   status: number;
   statusText: string;
-  headers: LaxiosHeaders;
-  config: LaxiosRequestConfig;
+  headers: SaxiosHeaders;
+  config: SaxiosRequestConfig;
   request?: any;
 }
 ```
@@ -97,7 +97,7 @@ interface LaxiosResponse<T = any> {
 
 ### Request Interceptor
 ```typescript
-laxios.interceptors.request.use(
+saxios.interceptors.request.use(
   (config) => {
     // Request'i değiştir
     config.headers.Authorization = `Bearer ${token}`;
@@ -111,7 +111,7 @@ laxios.interceptors.request.use(
 
 ### Response Interceptor
 ```typescript
-laxios.interceptors.response.use(
+saxios.interceptors.response.use(
   (response) => {
     // Response'u değiştir
     return response;
@@ -130,9 +130,9 @@ laxios.interceptors.response.use(
 
 ```typescript
 try {
-  const response = await laxios.get('/api/data');
+  const response = await saxios.get('/api/data');
 } catch (error) {
-  if (laxios.isLaxiosError(error)) {
+  if (saxios.isSaxiosError(error)) {
     console.log('Status:', error.response?.status);
     console.log('Data:', error.response?.data);
   } else {
@@ -145,9 +145,9 @@ try {
 
 ### CancelToken ile
 ```typescript
-const source = laxios.CancelToken.source();
+const source = saxios.CancelToken.source();
 
-const request = laxios.get('/api/data', {
+const request = saxios.get('/api/data', {
   cancelToken: source.token
 });
 
@@ -159,7 +159,7 @@ source.cancel('Operation cancelled');
 ```typescript
 const controller = new AbortController();
 
-const request = laxios.get('/api/data', {
+const request = saxios.get('/api/data', {
   signal: controller.signal
 });
 
@@ -171,7 +171,7 @@ controller.abort();
 
 ### toFormData
 ```typescript
-const formData = laxios.toFormData({
+const formData = saxios.toFormData({
   name: 'John',
   file: fileInput.files[0]
 });
@@ -180,16 +180,16 @@ const formData = laxios.toFormData({
 ### formToJSON
 ```typescript
 const formElement = document.getElementById('myForm');
-const jsonData = laxios.formToJSON(formElement);
+const jsonData = saxios.formToJSON(formElement);
 ```
 
 ### Type Guards
 ```typescript
-if (laxios.isLaxiosError(error)) {
-  // LaxiosError
+if (saxios.isSaxiosError(error)) {
+  // SaxiosError
 }
 
-if (laxios.isCancel(error)) {
+if (saxios.isCancel(error)) {
   // Cancel error
 }
 ```
@@ -204,11 +204,11 @@ interface User {
 }
 
 // Tip güvenli request
-const response = await laxios.get<User[]>('/users');
+const response = await saxios.get<User[]>('/users');
 const users: User[] = response.data;
 
 // Tip güvenli POST
-const newUser = await laxios.post<User>('/users', {
+const newUser = await saxios.post<User>('/users', {
   name: 'John',
   email: 'john@example.com'
 });
@@ -218,14 +218,14 @@ const newUser = await laxios.post<User>('/users', {
 
 ### Timeout
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   timeout: 10000 // 10 saniye
 });
 ```
 
 ### Custom Headers
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   headers: {
     'Content-Type': 'application/json',
     'X-API-Key': 'your-api-key'
@@ -235,7 +235,7 @@ const api = laxios.create({
 
 ### Base URL
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   baseURL: 'https://api.example.com/v1'
 });
 
@@ -245,21 +245,21 @@ await api.get('/users');
 
 ### Credentials
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   withCredentials: true // Cookies gönder
 });
 ```
 
 ### Response Type
 ```typescript
-const response = await laxios.get('/file.pdf', {
+const response = await saxios.get('/file.pdf', {
   responseType: 'blob'
 });
 ```
 
 ### Progress Tracking
 ```typescript
-await laxios.post('/upload', formData, {
+await saxios.post('/upload', formData, {
   onUploadProgress: (progressEvent) => {
     const percent = Math.round(
       (progressEvent.loaded * 100) / (progressEvent.total || 1)

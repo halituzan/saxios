@@ -21,32 +21,32 @@ export type Method =
 export type ResponseType = 'arraybuffer' | 'blob' | 'document' | 'json' | 'text' | 'stream';
 
 // Request/Response Headers
-export interface LaxiosHeaders {
+export interface SaxiosHeaders {
   [key: string]: string | number | boolean | null | undefined;
 }
 
 // Request Configuration
-export interface LaxiosRequestConfig<D = any> {
+export interface SaxiosRequestConfig<D = any> {
   url?: string;
   method?: Method;
   baseURL?: string;
-  transformRequest?: LaxiosTransformer | LaxiosTransformer[];
-  transformResponse?: LaxiosTransformer | LaxiosTransformer[];
-  headers?: LaxiosHeaders;
+  transformRequest?: SaxiosTransformer | SaxiosTransformer[];
+  transformResponse?: SaxiosTransformer | SaxiosTransformer[];
+  headers?: SaxiosHeaders;
   params?: any;
   paramsSerializer?: (params: any) => string;
   data?: D;
   timeout?: number;
   timeoutErrorMessage?: string;
   withCredentials?: boolean;
-  adapter?: LaxiosAdapter;
-  auth?: LaxiosBasicCredentials;
+  adapter?: SaxiosAdapter;
+  auth?: SaxiosBasicCredentials;
   responseType?: ResponseType;
   responseEncoding?: string;
   xsrfCookieName?: string;
   xsrfHeaderName?: string;
-  onUploadProgress?: (progressEvent: LaxiosProgressEvent) => void;
-  onDownloadProgress?: (progressEvent: LaxiosProgressEvent) => void;
+  onUploadProgress?: (progressEvent: SaxiosProgressEvent) => void;
+  onDownloadProgress?: (progressEvent: SaxiosProgressEvent) => void;
   maxContentLength?: number;
   validateStatus?: (status: number) => boolean;
   maxBodyLength?: number;
@@ -54,11 +54,11 @@ export interface LaxiosRequestConfig<D = any> {
   socketPath?: string | null;
   httpAgent?: any;
   httpsAgent?: any;
-  proxy?: LaxiosProxyConfig | false;
+  proxy?: SaxiosProxyConfig | false;
   cancelToken?: CancelToken;
   signal?: AbortSignal;
   decompress?: boolean;
-  transitional?: LaxiosTransitionalOptions;
+  transitional?: SaxiosTransitionalOptions;
   env?: {
     FormData?: new (...args: any[]) => object;
   };
@@ -74,28 +74,28 @@ export interface LaxiosRequestConfig<D = any> {
 }
 
 // Response Interface
-export interface LaxiosResponse<T = any, D = any> {
+export interface SaxiosResponse<T = any, D = any> {
   data: T;
   status: number;
   statusText: string;
-  headers: LaxiosHeaders;
-  config: LaxiosRequestConfig<D>;
+  headers: SaxiosHeaders;
+  config: SaxiosRequestConfig<D>;
   request?: any;
 }
 
 // Error Interface
-export interface LaxiosError<T = unknown, D = any> extends Error {
-  config?: LaxiosRequestConfig<D>;
+export interface SaxiosError<T = unknown, D = any> extends Error {
+  config?: SaxiosRequestConfig<D>;
   code?: string;
   request?: any;
-  response?: LaxiosResponse<T, D>;
-  isLaxiosError: boolean;
+  response?: SaxiosResponse<T, D>;
+  isSaxiosError: boolean;
   status?: number;
   toJSON: () => object;
 }
 
 // Interceptors
-export interface LaxiosInterceptorManager<V> {
+export interface SaxiosInterceptorManager<V> {
   use<T = V>(
     onFulfilled?: (value: V) => T | Promise<T>,
     onRejected?: (error: any) => any
@@ -105,26 +105,26 @@ export interface LaxiosInterceptorManager<V> {
 }
 
 // Transformers
-export interface LaxiosTransformer {
-  (data: any, headers?: LaxiosHeaders): any;
+export interface SaxiosTransformer {
+  (data: any, headers?: SaxiosHeaders): any;
 }
 
 // Adapter
-export interface LaxiosAdapter {
-  (config: LaxiosRequestConfig): LaxiosPromise;
+export interface SaxiosAdapter {
+  (config: SaxiosRequestConfig): SaxiosPromise;
 }
 
 // Promise
-export interface LaxiosPromise<T = any> extends Promise<LaxiosResponse<T>> {}
+export interface SaxiosPromise<T = any> extends Promise<SaxiosResponse<T>> {}
 
 // Basic Auth
-export interface LaxiosBasicCredentials {
+export interface SaxiosBasicCredentials {
   username: string;
   password: string;
 }
 
 // Proxy Config
-export interface LaxiosProxyConfig {
+export interface SaxiosProxyConfig {
   host: string;
   port: number;
   auth?: {
@@ -135,7 +135,7 @@ export interface LaxiosProxyConfig {
 }
 
 // Progress Event
-export interface LaxiosProgressEvent {
+export interface SaxiosProgressEvent {
   loaded: number;
   total?: number;
   progress?: number;
@@ -167,7 +167,7 @@ export interface CancelTokenSource {
 }
 
 // Transitional Options
-export interface LaxiosTransitionalOptions {
+export interface SaxiosTransitionalOptions {
   silentJSONParsing?: boolean;
   forcedJSONParsing?: boolean;
   clarifyTimeoutError?: boolean;
@@ -188,51 +188,51 @@ export interface FormSerializerHelpers {
 }
 
 // Instance Interface
-export interface LaxiosInstance extends Laxios {
-  <T = any, R = LaxiosResponse<T>, D = any>(config: LaxiosRequestConfig<D>): Promise<R>;
-  <T = any, R = LaxiosResponse<T>, D = any>(url: string, config?: LaxiosRequestConfig<D>): Promise<R>;
+export interface SaxiosInstance extends SaxiosCallable {
+  <T = any, R = SaxiosResponse<T>, D = any>(config: SaxiosRequestConfig<D>): Promise<R>;
+  <T = any, R = SaxiosResponse<T>, D = any>(url: string, config?: SaxiosRequestConfig<D>): Promise<R>;
   
-  defaults: Omit<LaxiosRequestConfig, 'url' | 'method' | 'data'>;
+  defaults: Omit<SaxiosRequestConfig, 'url' | 'method' | 'data'>;
   interceptors: {
-    request: LaxiosInterceptorManager<LaxiosRequestConfig>;
-    response: LaxiosInterceptorManager<LaxiosResponse>;
+    request: SaxiosInterceptorManager<SaxiosRequestConfig>;
+    response: SaxiosInterceptorManager<SaxiosResponse>;
   };
   cache: any; // CacheManager type will be resolved at runtime
   features: any; // FeatureManager type will be resolved at runtime
   
-  getUri(config?: LaxiosRequestConfig): string;
-  request<T = any, R = LaxiosResponse<T>, D = any>(config: LaxiosRequestConfig<D>): Promise<R>;
-  get<T = any, R = LaxiosResponse<T>, D = any>(url: string, config?: LaxiosRequestConfig<D>): Promise<R>;
-  delete<T = any, R = LaxiosResponse<T>, D = any>(url: string, config?: LaxiosRequestConfig<D>): Promise<R>;
-  head<T = any, R = LaxiosResponse<T>, D = any>(url: string, config?: LaxiosRequestConfig<D>): Promise<R>;
-  options<T = any, R = LaxiosResponse<T>, D = any>(url: string, config?: LaxiosRequestConfig<D>): Promise<R>;
-  post<T = any, R = LaxiosResponse<T>, D = any>(url: string, data?: D, config?: LaxiosRequestConfig<D>): Promise<R>;
-  put<T = any, R = LaxiosResponse<T>, D = any>(url: string, data?: D, config?: LaxiosRequestConfig<D>): Promise<R>;
-  patch<T = any, R = LaxiosResponse<T>, D = any>(url: string, data?: D, config?: LaxiosRequestConfig<D>): Promise<R>;
+  getUri(config?: SaxiosRequestConfig): string;
+  request<T = any, R = SaxiosResponse<T>, D = any>(config: SaxiosRequestConfig<D>): Promise<R>;
+  get<T = any, R = SaxiosResponse<T>, D = any>(url: string, config?: SaxiosRequestConfig<D>): Promise<R>;
+  delete<T = any, R = SaxiosResponse<T>, D = any>(url: string, config?: SaxiosRequestConfig<D>): Promise<R>;
+  head<T = any, R = SaxiosResponse<T>, D = any>(url: string, config?: SaxiosRequestConfig<D>): Promise<R>;
+  options<T = any, R = SaxiosResponse<T>, D = any>(url: string, config?: SaxiosRequestConfig<D>): Promise<R>;
+  post<T = any, R = SaxiosResponse<T>, D = any>(url: string, data?: D, config?: SaxiosRequestConfig<D>): Promise<R>;
+  put<T = any, R = SaxiosResponse<T>, D = any>(url: string, data?: D, config?: SaxiosRequestConfig<D>): Promise<R>;
+  patch<T = any, R = SaxiosResponse<T>, D = any>(url: string, data?: D, config?: SaxiosRequestConfig<D>): Promise<R>;
   
-  postForm<T = any, R = LaxiosResponse<T>, D = any>(url: string, data?: D, config?: LaxiosRequestConfig<D>): Promise<R>;
-  putForm<T = any, R = LaxiosResponse<T>, D = any>(url: string, data?: D, config?: LaxiosRequestConfig<D>): Promise<R>;
-  patchForm<T = any, R = LaxiosResponse<T>, D = any>(url: string, data?: D, config?: LaxiosRequestConfig<D>): Promise<R>;
+  postForm<T = any, R = SaxiosResponse<T>, D = any>(url: string, data?: D, config?: SaxiosRequestConfig<D>): Promise<R>;
+  putForm<T = any, R = SaxiosResponse<T>, D = any>(url: string, data?: D, config?: SaxiosRequestConfig<D>): Promise<R>;
+  patchForm<T = any, R = SaxiosResponse<T>, D = any>(url: string, data?: D, config?: SaxiosRequestConfig<D>): Promise<R>;
 }
 
-// Main Laxios Interface
-export interface Laxios {
-  <T = any, R = LaxiosResponse<T>, D = any>(config: LaxiosRequestConfig<D>): Promise<R>;
-  <T = any, R = LaxiosResponse<T>, D = any>(url: string, config?: LaxiosRequestConfig<D>): Promise<R>;
+/** Çağrılabilir HTTP istemcisi imzası (varsayılan export `saxios` ile eşleşir) */
+export interface SaxiosCallable {
+  <T = any, R = SaxiosResponse<T>, D = any>(config: SaxiosRequestConfig<D>): Promise<R>;
+  <T = any, R = SaxiosResponse<T>, D = any>(url: string, config?: SaxiosRequestConfig<D>): Promise<R>;
 }
 
 // Static Interface
-export interface LaxiosStatic extends LaxiosInstance {
-  create(config?: LaxiosRequestConfig): LaxiosInstance;
+export interface SaxiosStatic extends SaxiosInstance {
+  create(config?: SaxiosRequestConfig): SaxiosInstance;
   Cancel: any;
   CancelToken: any;
-  Laxios: any;
-  LaxiosError: any;
+  Saxios: any;
+  SaxiosError: any;
   readonly VERSION: string;
   isCancel(value: any): value is Cancel;
   all<T>(values: Array<T | Promise<T>>): Promise<T[]>;
   spread<T, R>(callback: (...args: T[]) => R): (array: T[]) => R;
-  isLaxiosError<T = any, D = any>(payload: any): payload is LaxiosError<T, D>;
+  isSaxiosError<T = any, D = any>(payload: any): payload is SaxiosError<T, D>;
   toFormData(sourceObj: object, targetFormData?: GenericFormData, options?: FormSerializerOptions): GenericFormData;
   formToJSON(form: GenericFormData | GenericHTMLFormElement): object;
 }
@@ -249,4 +249,4 @@ export interface GenericHTMLFormElement {
 }
 
 // Default export type - sadece tip tanımı
-export default {} as LaxiosStatic;
+export default {} as SaxiosStatic;

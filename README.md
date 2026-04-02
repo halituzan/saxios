@@ -1,8 +1,8 @@
-# 🚀 Laxios
+# 🚀 saxios
 
 Modern, TypeScript-first HTTP client library with full axios compatibility
 
-[![npm version](https://badge.fury.io/js/laxios.svg)](https://badge.fury.io/js/laxios)
+[![npm version](https://badge.fury.io/js/saxios.svg)](https://badge.fury.io/js/saxios)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Test Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](./coverage)
@@ -33,15 +33,15 @@ Modern, TypeScript-first HTTP client library with full axios compatibility
 ## 📦 Kurulum
 
 ```bash
-npm install laxios
+npm install saxios
 ```
 
 ```bash
-yarn add laxios
+yarn add saxios
 ```
 
 ```bash
-pnpm add laxios
+pnpm add saxios
 ```
 
 ## 🚀 Hızlı Başlangıç
@@ -49,33 +49,33 @@ pnpm add laxios
 ### Temel Kullanım
 
 ```typescript
-import laxios from 'laxios';
+import saxios from 'saxios';
 
 // GET request
-const response = await laxios.get('https://api.example.com/users');
+const response = await saxios.get('https://api.example.com/users');
 console.log(response.data);
 
 // POST request
-const newUser = await laxios.post('https://api.example.com/users', {
+const newUser = await saxios.post('https://api.example.com/users', {
   name: 'John Doe',
   email: 'john@example.com'
 });
 
 // PUT request
-const updatedUser = await laxios.put('https://api.example.com/users/1', {
+const updatedUser = await saxios.put('https://api.example.com/users/1', {
   name: 'Jane Doe'
 });
 
 // DELETE request
-await laxios.delete('https://api.example.com/users/1');
+await saxios.delete('https://api.example.com/users/1');
 ```
 
 ### Instance Oluşturma
 
 ```typescript
-import laxios from 'laxios';
+import saxios from 'saxios';
 
-const api = laxios.create({
+const api = saxios.create({
   baseURL: 'https://api.example.com',
   timeout: 5000,
   headers: {
@@ -92,10 +92,10 @@ const user = await api.post('/users', userData);
 ### Cache Kullanımı (Axios'da Yok! 🆕)
 
 ```typescript
-import laxios from 'laxios';
+import saxios from 'saxios';
 
 // Cache'i etkinleştir
-const api = laxios.create({
+const api = saxios.create({
   baseURL: 'https://api.example.com',
   cache: true // Varsayılan cache ayarları
 });
@@ -107,7 +107,7 @@ const users1 = await api.get('/users');
 const users2 = await api.get('/users');
 
 // Özel cache konfigürasyonu
-const apiWithCustomCache = laxios.create({
+const apiWithCustomCache = saxios.create({
   baseURL: 'https://api.example.com',
   cache: {
     enabled: true,
@@ -151,7 +151,7 @@ const config = {
   responseType: 'json'
 };
 
-const response = await laxios.request(config);
+const response = await saxios.request(config);
 ```
 
 ### Interceptors
@@ -160,7 +160,7 @@ const response = await laxios.request(config);
 
 ```typescript
 // Request interceptor ekle
-laxios.interceptors.request.use(
+saxios.interceptors.request.use(
   (config) => {
     // Request gönderilmeden önce
     config.headers.Authorization = `Bearer ${getToken()}`;
@@ -178,7 +178,7 @@ laxios.interceptors.request.use(
 
 ```typescript
 // Response interceptor ekle
-laxios.interceptors.response.use(
+saxios.interceptors.response.use(
   (response) => {
     // Başarılı response
     console.log('Response alındı:', response);
@@ -198,12 +198,12 @@ laxios.interceptors.response.use(
 ### Error Handling
 
 ```typescript
-import { isLaxiosError } from 'laxios';
+import { isSaxiosError } from 'saxios';
 
 try {
-  const response = await laxios.get('/api/users');
+  const response = await saxios.get('/api/users');
 } catch (error) {
-  if (isLaxiosError(error)) {
+  if (isSaxiosError(error)) {
     console.log('Status:', error.response?.status);
     console.log('Data:', error.response?.data);
     console.log('Headers:', error.response?.headers);
@@ -216,13 +216,13 @@ try {
 ### Cancel Token
 
 ```typescript
-import { CancelToken } from 'laxios';
+import { CancelToken } from 'saxios';
 
 // Cancel token oluştur
 const source = CancelToken.source();
 
 // Request gönder
-const request = laxios.get('/api/data', {
+const request = saxios.get('/api/data', {
   cancelToken: source.token
 });
 
@@ -232,7 +232,7 @@ source.cancel('İşlem kullanıcı tarafından iptal edildi');
 try {
   const response = await request;
 } catch (error) {
-  if (laxios.isCancel(error)) {
+  if (saxios.isCancel(error)) {
     console.log('Request iptal edildi:', error.message);
   }
 }
@@ -243,7 +243,7 @@ try {
 ```typescript
 const controller = new AbortController();
 
-const request = laxios.get('/api/data', {
+const request = saxios.get('/api/data', {
   signal: controller.signal
 });
 
@@ -256,7 +256,7 @@ setTimeout(() => {
 ### Progress Tracking
 
 ```typescript
-const response = await laxios.post('/api/upload', formData, {
+const response = await saxios.post('/api/upload', formData, {
   onUploadProgress: (progressEvent) => {
     const percentCompleted = Math.round(
       (progressEvent.loaded * 100) / (progressEvent.total || 1)
@@ -276,28 +276,28 @@ const response = await laxios.post('/api/upload', formData, {
 
 ```typescript
 // Object'i FormData'ya dönüştür
-const formData = laxios.toFormData({
+const formData = saxios.toFormData({
   name: 'John',
   file: fileInput.files[0],
   tags: ['tag1', 'tag2']
 });
 
-const response = await laxios.post('/api/upload', formData);
+const response = await saxios.post('/api/upload', formData);
 
 // Form element'ini JSON'a dönüştür
 const formElement = document.getElementById('myForm') as HTMLFormElement;
-const jsonData = laxios.formToJSON(formElement);
+const jsonData = saxios.formToJSON(formElement);
 ```
 
 ### Cache Yönetimi (Axios'da Olmayan Özellik! 🆕)
 
-Laxios, Axios'da bulunmayan gelişmiş bir cache sistemi sunar:
+saxios, Axios'da bulunmayan gelişmiş bir cache sistemi sunar:
 
 #### Temel Cache Kullanımı
 
 ```typescript
 // Cache'i etkinleştir
-const api = laxios.create({
+const api = saxios.create({
   cache: true
 });
 
@@ -311,7 +311,7 @@ const cachedUsers = await api.get('/users');
 #### Gelişmiş Cache Konfigürasyonu
 
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   cache: {
     enabled: true,
     ttl: 300000, // 5 dakika cache süresi
@@ -403,11 +403,11 @@ interface CreateUserRequest {
 }
 
 // Tip güvenli request
-const response = await laxios.get<User[]>('/api/users');
+const response = await saxios.get<User[]>('/api/users');
 const users: User[] = response.data;
 
 // Tip güvenli POST
-const newUser = await laxios.post<User, CreateUserRequest>('/api/users', {
+const newUser = await saxios.post<User, CreateUserRequest>('/api/users', {
   name: 'John',
   email: 'john@example.com'
 });
@@ -464,7 +464,7 @@ npm run lint
 
 ## 📈 Performance
 
-Laxios, modern fetch API ve akıllı cache sistemi ile yüksek performans sağlar:
+saxios, modern fetch API ve akıllı cache sistemi ile yüksek performans sağlar:
 
 - ✅ Tree-shakeable
 - ✅ Minimal bundle size (~15KB gzipped)
@@ -477,22 +477,22 @@ Laxios, modern fetch API ve akıllı cache sistemi ile yüksek performans sağla
 
 ## 🔄 Axios'tan Geçiş
 
-Laxios, Axios ile %100 uyumlu API sunar. Mevcut Axios kodunuz minimal değişiklikle çalışacaktır:
+saxios, Axios ile %100 uyumlu API sunar. Mevcut Axios kodunuz minimal değişiklikle çalışacaktır:
 
 ```typescript
 // Axios
 import axios from 'axios';
 
-// Laxios - sadece import değiştirin
-import laxios from 'laxios';
+// saxios - sadece import değiştirin
+import saxios from 'saxios';
 
 // Aynı API, aynı kullanım
-const response = await laxios.get('/api/users');
+const response = await saxios.get('/api/users');
 ```
 
-### Laxios'un Axios'a Göre Avantajları
+### saxios'un Axios'a Göre Avantajları
 
-| Özellik | Axios | Laxios v2.0 |
+| Özellik | Axios | saxios v2.0 |
 |---------|--------|-------------|
 | **Cache Sistemi** | ❌ Yok | ✅ Akıllı cache sistemi |
 | **Auto Retry** | ❌ Manuel | ✅ Akıllı retry mekanizması |
@@ -511,7 +511,7 @@ const response = await laxios.get('/api/users');
 
 ### 🔄 **Auto Retry System**
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   features: {
     retry: {
       enabled: true,
@@ -529,7 +529,7 @@ const data = await api.get('/api/users');
 
 ### 🎯 **Request Deduplication**
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   features: {
     deduplication: {
       enabled: true,
@@ -548,7 +548,7 @@ Promise.all([
 
 ### 📊 **Built-in Analytics**
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   features: {
     analytics: {
       enabled: true,
@@ -566,7 +566,7 @@ console.log(`Error rate: ${stats.errorRate}%`);
 
 ### 🔒 **Advanced Security**
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   features: {
     security: {
       enabled: true,
@@ -583,7 +583,7 @@ await api.post('/api/login', { username, password });
 
 ### 🌐 **Offline Support**
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   features: {
     offline: {
       enabled: true,
@@ -600,7 +600,7 @@ await api.post('/api/data', { info: 'test' });
 
 ### ⚡ **Request Batching**
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   features: {
     batching: {
       enabled: true,
@@ -618,7 +618,7 @@ api.get('/api/users/3'); // Tek batch request olarak gönderilir
 
 ### 📝 **Advanced Logging**
 ```typescript
-const api = laxios.create({
+const api = saxios.create({
   features: {
     logging: {
       enabled: true,
@@ -644,14 +644,14 @@ await axios.get('/api/users');
 await axios.get('/api/users'); // Yine network request
 console.timeEnd('axios'); // ~200ms
 
-// Laxios - İkinci request cache'den
-import laxios from 'laxios';
-const api = laxios.create({ cache: true });
+// saxios - İkinci request cache'den
+import saxios from 'saxios';
+const api = saxios.create({ cache: true });
 
-console.time('laxios');
+console.time('saxios');
 await api.get('/api/users'); // Network request
 await api.get('/api/users'); // Cache'den (~1ms)
-console.timeEnd('laxios'); // ~101ms (50% daha hızlı!)
+console.timeEnd('saxios'); // ~101ms (50% daha hızlı!)
 ```
 
 ## 🤝 Katkıda Bulunma
@@ -674,10 +674,10 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 
 ## 📞 Destek
 
-- 🐛 [Issues](https://github.com/yourusername/laxios/issues)
-- 💬 [Discussions](https://github.com/yourusername/laxios/discussions)
-- 📧 Email: support@laxios.dev
+- 🐛 [Issues](https://github.com/yourusername/saxios/issues)
+- 💬 [Discussions](https://github.com/yourusername/saxios/discussions)
+- 📧 Email: support@saxios.dev
 
 ---
 
-**Laxios ile modern HTTP client deneyimini yaşayın! 🚀**
+**saxios ile modern HTTP client deneyimini yaşayın! 🚀**

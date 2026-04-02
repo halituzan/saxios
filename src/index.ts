@@ -1,10 +1,10 @@
-import { Laxios } from './core/Laxios';
-import { LaxiosError, isLaxiosError } from './core/LaxiosError';
+import { Saxios } from './core/Saxios';
+import { SaxiosError, isSaxiosError } from './core/SaxiosError';
 import { Cancel, CancelToken, isCancel } from './core/Cancel';
 import {
-  LaxiosRequestConfig,
-  LaxiosInstance,
-  LaxiosStatic,
+  SaxiosRequestConfig,
+  SaxiosInstance,
+  SaxiosStatic,
   GenericFormData,
   GenericHTMLFormElement,
   FormSerializerOptions
@@ -12,18 +12,18 @@ import {
 import { isObject } from './utils';
 
 /**
- * Laxios instance oluşturan fonksiyon
+ * saxios instance oluşturan fonksiyon
  */
-function createInstance(defaultConfig?: LaxiosRequestConfig): LaxiosInstance {
-  const context = new Laxios(defaultConfig);
+function createInstance(defaultConfig?: SaxiosRequestConfig): SaxiosInstance {
+  const context = new Saxios(defaultConfig);
   
   // Callable instance oluştur
   const instance = function(configOrUrl: any, config?: any) {
     return context.request(configOrUrl, config);
-  } as LaxiosInstance;
+  } as SaxiosInstance;
 
-  // Laxios prototype'ını kopyala
-  Object.setPrototypeOf(instance, Laxios.prototype);
+  // Saxios prototype'ını kopyala
+  Object.setPrototypeOf(instance, Saxios.prototype);
   
   // Context'i instance'a kopyala
   Object.assign(instance, context);
@@ -32,45 +32,45 @@ function createInstance(defaultConfig?: LaxiosRequestConfig): LaxiosInstance {
 }
 
 /**
- * Default laxios instance
+ * Default saxios instance (npm paket adı: saxios, küçük harf)
  */
-const laxios = createInstance();
+const saxios = createInstance();
 
 // Static metodları ekle
-(laxios as any).Laxios = Laxios;
-(laxios as any).LaxiosError = LaxiosError;
-(laxios as any).Cancel = Cancel;
-(laxios as any).CancelToken = CancelToken;
-(laxios as any).VERSION = '1.0.0';
+(saxios as any).Saxios = Saxios;
+(saxios as any).SaxiosError = SaxiosError;
+(saxios as any).Cancel = Cancel;
+(saxios as any).CancelToken = CancelToken;
+(saxios as any).VERSION = '2.0.0';
 
 /**
  * Yeni instance oluştur
  */
-(laxios as any).create = function create(instanceConfig?: LaxiosRequestConfig): LaxiosInstance {
+(saxios as any).create = function create(instanceConfig?: SaxiosRequestConfig): SaxiosInstance {
   return createInstance(instanceConfig);
 };
 
 /**
  * Cancel kontrolü
  */
-(laxios as any).isCancel = isCancel;
+(saxios as any).isCancel = isCancel;
 
 /**
- * LaxiosError kontrolü
+ * SaxiosError kontrolü
  */
-(laxios as any).isLaxiosError = isLaxiosError;
+(saxios as any).isSaxiosError = isSaxiosError;
 
 /**
  * Promise.all wrapper
  */
-(laxios as any).all = function all<T>(promises: Array<T | Promise<T>>): Promise<T[]> {
+(saxios as any).all = function all<T>(promises: Array<T | Promise<T>>): Promise<T[]> {
   return Promise.all(promises);
 };
 
 /**
  * Spread helper
  */
-(laxios as any).spread = function spread<T, R>(callback: (...args: T[]) => R) {
+(saxios as any).spread = function spread<T, R>(callback: (...args: T[]) => R) {
   return function wrap(arr: T[]): R {
     return callback.apply(null, arr);
   };
@@ -79,7 +79,7 @@ const laxios = createInstance();
 /**
  * FormData'ya dönüştüren fonksiyon
  */
-(laxios as any).toFormData = function toFormData(
+(saxios as any).toFormData = function toFormData(
   sourceObj: object,
   targetFormData?: GenericFormData,
   options?: FormSerializerOptions
@@ -133,7 +133,7 @@ const laxios = createInstance();
 /**
  * Form'u JSON'a dönüştüren fonksiyon
  */
-(laxios as any).formToJSON = function formToJSON(form: GenericFormData | GenericHTMLFormElement): object {
+(saxios as any).formToJSON = function formToJSON(form: GenericFormData | GenericHTMLFormElement): object {
   const result: any = {};
   
   if (form instanceof FormData) {
@@ -148,7 +148,6 @@ const laxios = createInstance();
       }
     });
   } else if (form && typeof form === 'object' && 'elements' in form) {
-    // HTML Form element
     const elements = (form as any).elements;
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
@@ -167,26 +166,23 @@ const laxios = createInstance();
   return result;
 };
 
-// Type assertion
-const laxiosStatic = laxios as LaxiosStatic;
+const saxiosStatic = saxios as SaxiosStatic;
 
-// Export edilecek tüm öğeler
-export default laxiosStatic;
+export default saxiosStatic;
 
 export {
-  Laxios,
-  LaxiosError,
+  Saxios,
+  SaxiosError,
   Cancel,
   CancelToken,
   isCancel,
-  isLaxiosError,
-  laxiosStatic as laxios
+  isSaxiosError,
+  saxiosStatic as saxios
 };
 
 export * from './types';
 export * from './cache';
 export * from './features';
 
-// CommonJS compatibility
-module.exports = laxiosStatic;
-module.exports.default = laxiosStatic;
+module.exports = saxiosStatic;
+module.exports.default = saxiosStatic;

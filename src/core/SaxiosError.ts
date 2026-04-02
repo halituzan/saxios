@@ -1,26 +1,26 @@
-import { LaxiosRequestConfig, LaxiosResponse, LaxiosError as ILaxiosError } from '../types';
+import { SaxiosRequestConfig, SaxiosResponse, SaxiosError as ISaxiosError } from '../types';
 
 /**
- * Laxios Error sınıfı
+ * saxios Error sınıfı
  */
-export class LaxiosError<T = unknown, D = any> extends Error implements ILaxiosError<T, D> {
-  public isLaxiosError: boolean = true;
-  public config?: LaxiosRequestConfig<D>;
+export class SaxiosError<T = unknown, D = any> extends Error implements ISaxiosError<T, D> {
+  public isSaxiosError: boolean = true;
+  public config?: SaxiosRequestConfig<D>;
   public code?: string;
   public request?: any;
-  public response?: LaxiosResponse<T, D>;
+  public response?: SaxiosResponse<T, D>;
   public status?: number;
 
   constructor(
     message?: string,
     code?: string,
-    config?: LaxiosRequestConfig<D>,
+    config?: SaxiosRequestConfig<D>,
     request?: any,
-    response?: LaxiosResponse<T, D>
+    response?: SaxiosResponse<T, D>
   ) {
     super(message);
     
-    this.name = 'LaxiosError';
+    this.name = 'SaxiosError';
     this.code = code;
     this.config = config;
     this.request = request;
@@ -72,23 +72,23 @@ export class LaxiosError<T = unknown, D = any> extends Error implements ILaxiosE
 }
 
 /**
- * LaxiosError oluşturan factory fonksiyonu
+ * SaxiosError oluşturan factory fonksiyonu
  */
 export function createError<T = unknown, D = any>(
   message: string,
   code?: string,
-  config?: LaxiosRequestConfig<D>,
+  config?: SaxiosRequestConfig<D>,
   request?: any,
-  response?: LaxiosResponse<T, D>
-): LaxiosError<T, D> {
-  return new LaxiosError<T, D>(message, code, config, request, response);
+  response?: SaxiosResponse<T, D>
+): SaxiosError<T, D> {
+  return new SaxiosError<T, D>(message, code, config, request, response);
 }
 
 /**
- * LaxiosError olup olmadığını kontrol eden fonksiyon
+ * SaxiosError olup olmadığını kontrol eden fonksiyon
  */
-export function isLaxiosError<T = any, D = any>(payload: any): payload is LaxiosError<T, D> {
-  return payload && payload.isLaxiosError === true;
+export function isSaxiosError<T = any, D = any>(payload: any): payload is SaxiosError<T, D> {
+  return payload && payload.isSaxiosError === true;
 }
 
 // Error kodları

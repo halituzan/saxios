@@ -1,5 +1,5 @@
 import { AnalyticsConfig, RequestMetrics } from '../types';
-import { LaxiosRequestConfig, LaxiosResponse, LaxiosError } from '../../types';
+import { SaxiosRequestConfig, SaxiosResponse, SaxiosError } from '../../types';
 
 /**
  * Analytics Manager - Request metrics ve analytics toplama
@@ -29,7 +29,7 @@ export class AnalyticsManager {
   /**
    * Request başlangıcını track et
    */
-  trackRequestStart(config: LaxiosRequestConfig): string {
+  trackRequestStart(config: SaxiosRequestConfig): string {
     if (!this.config.enabled) return '';
 
     const metricId = this.generateMetricId();
@@ -48,8 +48,8 @@ export class AnalyticsManager {
    */
   trackRequestEnd(
     _metricId: string,
-    config: LaxiosRequestConfig,
-    response: LaxiosResponse,
+    config: SaxiosRequestConfig,
+    response: SaxiosResponse,
     options: {
       cacheHit?: boolean;
       retryCount?: number;
@@ -83,8 +83,8 @@ export class AnalyticsManager {
    */
   trackRequestError(
     _metricId: string,
-    config: LaxiosRequestConfig,
-    error: LaxiosError,
+    config: SaxiosRequestConfig,
+    error: SaxiosError,
     options: {
       retryCount?: number;
     } = {}
@@ -106,7 +106,7 @@ export class AnalyticsManager {
   /**
    * Retry'ı track et
    */
-  trackRetry(config: LaxiosRequestConfig, attemptNumber: number): void {
+  trackRetry(config: SaxiosRequestConfig, attemptNumber: number): void {
     if (!this.config.enabled || !this.config.trackRetries) return;
 
     const metric = this.findMetricByUrl(config.url || '');

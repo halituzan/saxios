@@ -1,13 +1,12 @@
 import {
-  LaxiosRequestConfig,
-  LaxiosResponse,
-  LaxiosInstance,
-  LaxiosHeaders,
+  SaxiosRequestConfig,
+  SaxiosResponse,
+  SaxiosHeaders,
   Method,
-  LaxiosTransformer
+  SaxiosTransformer
 } from '../types';
 import { InterceptorManager, runInterceptors, runErrorInterceptors } from '../interceptors/InterceptorManager';
-import { createError, ERROR_CODES } from './LaxiosError';
+import { createError, ERROR_CODES } from './SaxiosError';
 import fetchAdapter, { setGlobalCacheManager } from '../adapters/fetch';
 import { CacheManager } from '../cache/CacheManager';
 import { FeatureManager } from '../features/FeatureManager';
@@ -27,7 +26,7 @@ import {
  */
 const DEFAULT_TRANSFORMERS = {
   request: [
-    function transformRequest(data: any, headers: LaxiosHeaders): any {
+    function transformRequest(data: any, headers: SaxiosHeaders): any {
       normalizeHeaderName(headers, 'Accept');
       normalizeHeaderName(headers, 'Content-Type');
 
@@ -45,7 +44,7 @@ const DEFAULT_TRANSFORMERS = {
 
       return data;
     }
-  ] as LaxiosTransformer[],
+  ] as SaxiosTransformer[],
 
   response: [
     function transformResponse(data: any): any {
@@ -58,7 +57,7 @@ const DEFAULT_TRANSFORMERS = {
       }
       return data;
     }
-  ] as LaxiosTransformer[]
+  ] as SaxiosTransformer[]
 };
 
 /**
@@ -83,18 +82,18 @@ const DEFAULT_HEADERS = {
 };
 
 /**
- * Ana Laxios sınıfı
+ * Ana Saxios sınıfı
  */
-export class Laxios implements LaxiosInstance {
-  public defaults: LaxiosRequestConfig;
+export class Saxios {
+  public defaults: SaxiosRequestConfig;
   public interceptors: {
-    request: InterceptorManager<LaxiosRequestConfig>;
-    response: InterceptorManager<LaxiosResponse>;
+    request: InterceptorManager<SaxiosRequestConfig>;
+    response: InterceptorManager<SaxiosResponse>;
   };
   public cache: CacheManager;
   public features: FeatureManager;
 
-  constructor(instanceConfig?: LaxiosRequestConfig) {
+  constructor(instanceConfig?: SaxiosRequestConfig) {
     this.defaults = {
       adapter: fetchAdapter,
       transformRequest: DEFAULT_TRANSFORMERS.request,
@@ -113,8 +112,8 @@ export class Laxios implements LaxiosInstance {
     }
 
     this.interceptors = {
-      request: new InterceptorManager<LaxiosRequestConfig>(),
-      response: new InterceptorManager<LaxiosResponse>()
+      request: new InterceptorManager<SaxiosRequestConfig>(),
+      response: new InterceptorManager<SaxiosResponse>()
     };
 
     // Cache manager'ı başlat
@@ -141,12 +140,12 @@ export class Laxios implements LaxiosInstance {
   /**
    * Request gönderen ana fonksiyon
    */
-  public async request<T = any, R = LaxiosResponse<T>, D = any>(
-    configOrUrl: LaxiosRequestConfig<D> | string,
-    config?: LaxiosRequestConfig<D>
+  public async request<T = any, R = SaxiosResponse<T>, D = any>(
+    configOrUrl: SaxiosRequestConfig<D> | string,
+    config?: SaxiosRequestConfig<D>
   ): Promise<R> {
     // Config'i normalize et
-    let mergedConfig: LaxiosRequestConfig<D>;
+    let mergedConfig: SaxiosRequestConfig<D>;
     
     if (isString(configOrUrl)) {
       mergedConfig = mergeConfig(this.defaults, { url: configOrUrl, ...config });
@@ -229,9 +228,9 @@ export class Laxios implements LaxiosInstance {
   /**
    * GET request
    */
-  public get<T = any, R = LaxiosResponse<T>, D = any>(
+  public get<T = any, R = SaxiosResponse<T>, D = any>(
     url: string, 
-    config?: LaxiosRequestConfig<D>
+    config?: SaxiosRequestConfig<D>
   ): Promise<R> {
     return this.request<T, R, D>({ ...config, method: 'get', url });
   }
@@ -239,9 +238,9 @@ export class Laxios implements LaxiosInstance {
   /**
    * DELETE request
    */
-  public delete<T = any, R = LaxiosResponse<T>, D = any>(
+  public delete<T = any, R = SaxiosResponse<T>, D = any>(
     url: string, 
-    config?: LaxiosRequestConfig<D>
+    config?: SaxiosRequestConfig<D>
   ): Promise<R> {
     return this.request<T, R, D>({ ...config, method: 'delete', url });
   }
@@ -249,9 +248,9 @@ export class Laxios implements LaxiosInstance {
   /**
    * HEAD request
    */
-  public head<T = any, R = LaxiosResponse<T>, D = any>(
+  public head<T = any, R = SaxiosResponse<T>, D = any>(
     url: string, 
-    config?: LaxiosRequestConfig<D>
+    config?: SaxiosRequestConfig<D>
   ): Promise<R> {
     return this.request<T, R, D>({ ...config, method: 'head', url });
   }
@@ -259,9 +258,9 @@ export class Laxios implements LaxiosInstance {
   /**
    * OPTIONS request
    */
-  public options<T = any, R = LaxiosResponse<T>, D = any>(
+  public options<T = any, R = SaxiosResponse<T>, D = any>(
     url: string, 
-    config?: LaxiosRequestConfig<D>
+    config?: SaxiosRequestConfig<D>
   ): Promise<R> {
     return this.request<T, R, D>({ ...config, method: 'options', url });
   }
@@ -269,10 +268,10 @@ export class Laxios implements LaxiosInstance {
   /**
    * POST request
    */
-  public post<T = any, R = LaxiosResponse<T>, D = any>(
+  public post<T = any, R = SaxiosResponse<T>, D = any>(
     url: string, 
     data?: D, 
-    config?: LaxiosRequestConfig<D>
+    config?: SaxiosRequestConfig<D>
   ): Promise<R> {
     return this.request<T, R, D>({ ...config, method: 'post', url, data });
   }
@@ -280,10 +279,10 @@ export class Laxios implements LaxiosInstance {
   /**
    * PUT request
    */
-  public put<T = any, R = LaxiosResponse<T>, D = any>(
+  public put<T = any, R = SaxiosResponse<T>, D = any>(
     url: string, 
     data?: D, 
-    config?: LaxiosRequestConfig<D>
+    config?: SaxiosRequestConfig<D>
   ): Promise<R> {
     return this.request<T, R, D>({ ...config, method: 'put', url, data });
   }
@@ -291,10 +290,10 @@ export class Laxios implements LaxiosInstance {
   /**
    * PATCH request
    */
-  public patch<T = any, R = LaxiosResponse<T>, D = any>(
+  public patch<T = any, R = SaxiosResponse<T>, D = any>(
     url: string, 
     data?: D, 
-    config?: LaxiosRequestConfig<D>
+    config?: SaxiosRequestConfig<D>
   ): Promise<R> {
     return this.request<T, R, D>({ ...config, method: 'patch', url, data });
   }
@@ -302,10 +301,10 @@ export class Laxios implements LaxiosInstance {
   /**
    * POST Form request
    */
-  public postForm<T = any, R = LaxiosResponse<T>, D = any>(
+  public postForm<T = any, R = SaxiosResponse<T>, D = any>(
     url: string, 
     data?: D, 
-    config?: LaxiosRequestConfig<D>
+    config?: SaxiosRequestConfig<D>
   ): Promise<R> {
     return this.request<T, R, D>({
       ...config,
@@ -322,10 +321,10 @@ export class Laxios implements LaxiosInstance {
   /**
    * PUT Form request
    */
-  public putForm<T = any, R = LaxiosResponse<T>, D = any>(
+  public putForm<T = any, R = SaxiosResponse<T>, D = any>(
     url: string, 
     data?: D, 
-    config?: LaxiosRequestConfig<D>
+    config?: SaxiosRequestConfig<D>
   ): Promise<R> {
     return this.request<T, R, D>({
       ...config,
@@ -342,10 +341,10 @@ export class Laxios implements LaxiosInstance {
   /**
    * PATCH Form request
    */
-  public patchForm<T = any, R = LaxiosResponse<T>, D = any>(
+  public patchForm<T = any, R = SaxiosResponse<T>, D = any>(
     url: string, 
     data?: D, 
-    config?: LaxiosRequestConfig<D>
+    config?: SaxiosRequestConfig<D>
   ): Promise<R> {
     return this.request<T, R, D>({
       ...config,
@@ -362,7 +361,7 @@ export class Laxios implements LaxiosInstance {
   /**
    * URI oluşturan fonksiyon
    */
-  public getUri(config?: LaxiosRequestConfig): string {
+  public getUri(config?: SaxiosRequestConfig): string {
     const mergedConfig = mergeConfig(this.defaults, config || {});
     return buildFullPath(mergedConfig.baseURL, mergedConfig.url);
   }
@@ -370,9 +369,9 @@ export class Laxios implements LaxiosInstance {
   /**
    * Headers'ı merge eden yardımcı fonksiyon
    */
-  private mergeHeaders(config: LaxiosRequestConfig): LaxiosHeaders {
+  private mergeHeaders(config: SaxiosRequestConfig): SaxiosHeaders {
     const method = config.method || 'get';
-    const headers: LaxiosHeaders = {};
+    const headers: SaxiosHeaders = {};
 
     // Common headers'ı ekle
     Object.assign(headers, this.defaults.headers?.common || {});
@@ -394,10 +393,4 @@ export class Laxios implements LaxiosInstance {
 
     return headers;
   }
-}
-
-// Callable interface implementation
-export interface Laxios {
-  <T = any, R = LaxiosResponse<T>, D = any>(config: LaxiosRequestConfig<D>): Promise<R>;
-  <T = any, R = LaxiosResponse<T>, D = any>(url: string, config?: LaxiosRequestConfig<D>): Promise<R>;
 }

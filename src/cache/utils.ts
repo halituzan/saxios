@@ -1,9 +1,9 @@
-import { LaxiosRequestConfig } from '../types';
+import { SaxiosRequestConfig } from '../types';
 
 /**
  * Cache key oluşturan utility fonksiyon
  */
-export function createCacheKey(config: LaxiosRequestConfig): string {
+export function createCacheKey(config: SaxiosRequestConfig): string {
   const method = (config.method || 'GET').toUpperCase();
   const url = config.url || '';
   

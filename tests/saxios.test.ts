@@ -1,9 +1,9 @@
-import laxios, { LaxiosError, Cancel, CancelToken, isCancel, isLaxiosError } from '../src';
+import saxios, { SaxiosError, Cancel, CancelToken, isCancel, isSaxiosError } from '../src';
 
 // Mock fetch
 const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
 
-describe('Laxios', () => {
+describe('saxios', () => {
   beforeEach(() => {
     mockFetch.mockClear();
   });
@@ -20,7 +20,7 @@ describe('Laxios', () => {
         json: () => Promise.resolve(responseData)
       } as Response);
 
-      const response = await laxios.get('https://api.example.com/users');
+      const response = await saxios.get('https://api.example.com/users');
       
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.example.com/users',
@@ -44,7 +44,7 @@ describe('Laxios', () => {
         text: () => Promise.resolve(JSON.stringify(responseData))
       } as Response);
 
-      const response = await laxios.post('https://api.example.com/users', requestData);
+      const response = await saxios.post('https://api.example.com/users', requestData);
       
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.example.com/users',
@@ -66,7 +66,7 @@ describe('Laxios', () => {
         text: () => Promise.resolve('{}')
       } as Response);
 
-      await laxios.get('https://api.example.com/users', {
+      await saxios.get('https://api.example.com/users', {
         headers: {
           'Authorization': 'Bearer token123',
           'Custom-Header': 'custom-value'
@@ -82,7 +82,7 @@ describe('Laxios', () => {
 
   describe('Instance creation', () => {
     it('should create instance with custom config', () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         baseURL: 'https://api.example.com',
         timeout: 5000,
         headers: {
@@ -96,7 +96,7 @@ describe('Laxios', () => {
     });
 
     it('should make request with instance config', async () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         baseURL: 'https://api.example.com'
       });
 
@@ -119,7 +119,7 @@ describe('Laxios', () => {
 
   describe('Interceptors', () => {
     it('should add request interceptor', async () => {
-      const instance = laxios.create();
+      const instance = saxios.create();
       const requestInterceptor = jest.fn((config) => {
         config.headers = { ...config.headers, 'X-Custom': 'intercepted' };
         return config;
@@ -144,7 +144,7 @@ describe('Laxios', () => {
     });
 
     it('should add response interceptor', async () => {
-      const instance = laxios.create();
+      const instance = saxios.create();
       const responseInterceptor = jest.fn((response) => {
         response.data = { ...response.data, intercepted: true };
         return response;
@@ -168,7 +168,7 @@ describe('Laxios', () => {
   });
 
   describe('Error handling', () => {
-    it('should throw LaxiosError on HTTP error', async () => {
+    it('should throw SaxiosError on HTTP error', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
@@ -178,11 +178,11 @@ describe('Laxios', () => {
       } as Response);
 
       try {
-        await laxios.get('https://api.example.com/users/999');
+        await saxios.get('https://api.example.com/users/999');
       } catch (error) {
-        expect(isLaxiosError(error)).toBe(true);
-        expect((error as LaxiosError).status).toBe(404);
-        expect((error as LaxiosError).response?.status).toBe(404);
+        expect(isSaxiosError(error)).toBe(true);
+        expect((error as SaxiosError).status).toBe(404);
+        expect((error as SaxiosError).response?.status).toBe(404);
       }
     });
 
@@ -190,10 +190,10 @@ describe('Laxios', () => {
       mockFetch.mockRejectedValueOnce(new TypeError('Network error'));
 
       try {
-        await laxios.get('https://api.example.com/users');
+        await saxios.get('https://api.example.com/users');
       } catch (error) {
-        expect(isLaxiosError(error)).toBe(true);
-        expect((error as LaxiosError).message).toContain('Network error');
+        expect(isSaxiosError(error)).toBe(true);
+        expect((error as SaxiosError).message).toContain('Network error');
       }
     });
   });
@@ -206,7 +206,7 @@ describe('Laxios', () => {
       source.cancel('Operation canceled');
 
       try {
-        await laxios.get('https://api.example.com/users', {
+        await saxios.get('https://api.example.com/users', {
           cancelToken: source.token
         });
       } catch (error) {
@@ -217,12 +217,12 @@ describe('Laxios', () => {
   });
 
   describe('Utility functions', () => {
-    it('should identify LaxiosError correctly', () => {
-      const laxiosError = new LaxiosError('Test error');
+    it('should identify SaxiosError correctly', () => {
+      const err = new SaxiosError('Test error');
       const regularError = new Error('Regular error');
 
-      expect(isLaxiosError(laxiosError)).toBe(true);
-      expect(isLaxiosError(regularError)).toBe(false);
+      expect(isSaxiosError(err)).toBe(true);
+      expect(isSaxiosError(regularError)).toBe(false);
     });
 
     it('should identify Cancel correctly', () => {
@@ -240,7 +240,7 @@ describe('Laxios', () => {
         hobbies: ['reading', 'coding']
       };
 
-      const formData = laxios.toFormData(obj);
+      const formData = saxios.toFormData(obj);
       expect(formData).toBeInstanceOf(FormData);
     });
   });
@@ -257,7 +257,7 @@ describe('Laxios', () => {
     });
 
     it('should make DELETE request', async () => {
-      await laxios.delete('https://api.example.com/users/1');
+      await saxios.delete('https://api.example.com/users/1');
       
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.example.com/users/1',
@@ -267,7 +267,7 @@ describe('Laxios', () => {
 
     it('should make PUT request', async () => {
       const data = { name: 'Updated Name' };
-      await laxios.put('https://api.example.com/users/1', data);
+      await saxios.put('https://api.example.com/users/1', data);
       
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.example.com/users/1',
@@ -280,7 +280,7 @@ describe('Laxios', () => {
 
     it('should make PATCH request', async () => {
       const data = { name: 'Patched Name' };
-      await laxios.patch('https://api.example.com/users/1', data);
+      await saxios.patch('https://api.example.com/users/1', data);
       
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.example.com/users/1',
@@ -292,7 +292,7 @@ describe('Laxios', () => {
     });
 
     it('should make HEAD request', async () => {
-      await laxios.head('https://api.example.com/users');
+      await saxios.head('https://api.example.com/users');
       
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.example.com/users',
@@ -301,7 +301,7 @@ describe('Laxios', () => {
     });
 
     it('should make OPTIONS request', async () => {
-      await laxios.options('https://api.example.com/users');
+      await saxios.options('https://api.example.com/users');
       
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.example.com/users',

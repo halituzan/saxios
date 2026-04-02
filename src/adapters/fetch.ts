@@ -1,11 +1,11 @@
 import { 
-  LaxiosRequestConfig, 
-  LaxiosResponse, 
-  LaxiosAdapter,
-  LaxiosHeaders,
-  LaxiosProgressEvent
+  SaxiosRequestConfig, 
+  SaxiosResponse, 
+  SaxiosAdapter,
+  SaxiosHeaders,
+  SaxiosProgressEvent
 } from '../types';
-import { createError, ERROR_CODES } from '../core/LaxiosError';
+import { createError, ERROR_CODES } from '../core/SaxiosError';
 import { Cancel } from '../core/Cancel';
 import { 
   buildURL, 
@@ -38,7 +38,7 @@ export function getGlobalCacheManager(): CacheManager | null {
 /**
  * Fetch tabanlı HTTP adapter (cache desteği ile)
  */
-export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): Promise<LaxiosResponse> => {
+export const fetchAdapter: SaxiosAdapter = async (config: SaxiosRequestConfig): Promise<SaxiosResponse> => {
   return new Promise(async (resolve, reject) => {
     const {
       url = '',
@@ -91,7 +91,7 @@ export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): 
         const cachedResponse = await cacheManager.get(cacheKey);
         if (cachedResponse) {
           // Cache hit - cached response'u döndür
-          const response: LaxiosResponse = {
+          const response: SaxiosResponse = {
             data: cachedResponse.data,
             status: cachedResponse.status,
             statusText: cachedResponse.statusText,
@@ -191,11 +191,11 @@ export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): 
       }
 
       // Request'i gönder
-      const response = await Promise.race(promises) as Response;
+      const fetchResponse = await Promise.race(promises) as Response;
 
       // Response headers'ını dönüştür
-      const responseHeaders: LaxiosHeaders = {};
-      response.headers.forEach((value, key) => {
+      const responseHeaders: SaxiosHeaders = {};
+      fetchResponse.headers.forEach((value, key) => {
         responseHeaders[key] = value;
       });
 
@@ -210,8 +210,8 @@ export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): 
             null,
             {
               data: null,
-              status: response.status,
-              statusText: response.statusText,
+              status: fetchResponse.status,
+              statusText: fetchResponse.statusText,
               headers: responseHeaders,
               config
             }
@@ -225,23 +225,23 @@ export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): 
       try {
         switch (responseType) {
           case 'arraybuffer':
-            responseData = await response.arrayBuffer();
+            responseData = await fetchResponse.arrayBuffer();
             break;
           case 'blob':
-            responseData = await response.blob();
+            responseData = await fetchResponse.blob();
             break;
           case 'text':
-            responseData = await response.text();
+            responseData = await fetchResponse.text();
             break;
           case 'json':
-            const text = await response.text();
+            const text = await fetchResponse.text();
             responseData = text ? JSON.parse(text) : null;
             break;
           case 'stream':
-            responseData = response.body;
+            responseData = fetchResponse.body;
             break;
           default:
-            responseData = await response.text();
+            responseData = await fetchResponse.text();
         }
       } catch (error) {
         throw createError(
@@ -251,8 +251,8 @@ export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): 
           null,
           {
             data: null,
-            status: response.status,
-            statusText: response.statusText,
+            status: fetchResponse.status,
+            statusText: fetchResponse.statusText,
             headers: responseHeaders,
             config
           }
@@ -262,7 +262,7 @@ export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): 
       // Download progress tracking
       if (onDownloadProgress && responseData) {
         const contentLength = parseInt(responseHeaders['content-length'] as string || '0', 10);
-        const progressEvent: LaxiosProgressEvent = {
+        const progressEvent: SaxiosProgressEvent = {
           loaded: getContentLength(responseData),
           total: contentLength || undefined,
           bytes: getContentLength(responseData),
@@ -276,20 +276,20 @@ export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): 
         onDownloadProgress(progressEvent);
       }
 
-      const laxiosResponse: LaxiosResponse = {
+      const saxiosResponse: SaxiosResponse = {
         data: responseData,
-        status: response.status,
-        statusText: response.statusText,
+        status: fetchResponse.status,
+        statusText: fetchResponse.statusText,
         headers: responseHeaders,
         config,
-        request: response
+        request: fetchResponse
       };
 
       // Status validation
-      if (validateStatus(response.status)) {
+      if (validateStatus(saxiosResponse.status)) {
         // Cache'e kaydet (eğer cache manager varsa ve cacheable ise)
         if (cacheManager && cacheKey && isCacheableResponse(
-          response.status, 
+          saxiosResponse.status, 
           responseHeaders, 
           method
         )) {
@@ -297,17 +297,17 @@ export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): 
           const headerTtl = parseCacheControlTTL(responseHeaders);
           const ttl = headerTtl || (cacheConfig?.ttl);
           
-          await cacheManager.set(cacheKey, laxiosResponse, ttl);
+          await cacheManager.set(cacheKey, saxiosResponse, ttl);
         }
         
-        resolve(laxiosResponse);
+        resolve(saxiosResponse);
       } else {
         reject(createError(
-          `Request failed with status code ${response.status}`,
+          `Request failed with status code ${saxiosResponse.status}`,
           ERROR_CODES.ERR_BAD_REQUEST,
           config,
-          response,
-          laxiosResponse
+          fetchResponse,
+          saxiosResponse
         ));
       }
 
@@ -318,7 +318,7 @@ export const fetchAdapter: LaxiosAdapter = async (config: LaxiosRequestConfig): 
         reject(createError('Network Error', ERROR_CODES.ERR_NETWORK, config, null, undefined));
       } else if (error instanceof Cancel) {
         reject(error);
-      } else if (error.isLaxiosError) {
+      } else if (error.isSaxiosError) {
         reject(error);
       } else {
         reject(createError('Network error', ERROR_CODES.ERR_NETWORK, config, null, undefined));

@@ -1,4 +1,4 @@
-import { LaxiosHeaders, LaxiosRequestConfig } from '../types';
+import { SaxiosHeaders, SaxiosRequestConfig } from '../types';
 
 /**
  * URL'leri birleştiren yardımcı fonksiyon
@@ -84,7 +84,7 @@ export function buildFullPath(baseURL?: string, requestedURL?: string): string {
 /**
  * Headers'ı normalize eden fonksiyon
  */
-export function normalizeHeaderName(headers: LaxiosHeaders, normalizedName: string): void {
+export function normalizeHeaderName(headers: SaxiosHeaders, normalizedName: string): void {
   Object.keys(headers).forEach(name => {
     if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
       headers[normalizedName] = headers[name];
@@ -206,8 +206,8 @@ export function isArrayBufferView(thing: any): boolean {
 /**
  * Config'leri merge eden fonksiyon
  */
-export function mergeConfig(config1: LaxiosRequestConfig, config2: LaxiosRequestConfig): LaxiosRequestConfig {
-  const config: LaxiosRequestConfig = {};
+export function mergeConfig(config1: SaxiosRequestConfig, config2: SaxiosRequestConfig): SaxiosRequestConfig {
+  const config: SaxiosRequestConfig = {};
   
   const valueFromConfig2Keys = ['url', 'method', 'data'];
   const mergeDeepPropertiesKeys = ['headers', 'auth', 'proxy', 'params'];
@@ -233,38 +233,38 @@ export function mergeConfig(config1: LaxiosRequestConfig, config2: LaxiosRequest
   }
 
   valueFromConfig2Keys.forEach(prop => {
-    if (config2[prop as keyof LaxiosRequestConfig] !== undefined) {
-      config[prop as keyof LaxiosRequestConfig] = config2[prop as keyof LaxiosRequestConfig];
+    if (config2[prop as keyof SaxiosRequestConfig] !== undefined) {
+      config[prop as keyof SaxiosRequestConfig] = config2[prop as keyof SaxiosRequestConfig];
     }
   });
 
   mergeDeepPropertiesKeys.forEach(prop => {
-    if (config2[prop as keyof LaxiosRequestConfig] !== undefined) {
-      config[prop as keyof LaxiosRequestConfig] = getMergedValue(
-        config1[prop as keyof LaxiosRequestConfig], 
-        config2[prop as keyof LaxiosRequestConfig]
+    if (config2[prop as keyof SaxiosRequestConfig] !== undefined) {
+      config[prop as keyof SaxiosRequestConfig] = getMergedValue(
+        config1[prop as keyof SaxiosRequestConfig], 
+        config2[prop as keyof SaxiosRequestConfig]
       );
-    } else if (config1[prop as keyof LaxiosRequestConfig] !== undefined) {
-      config[prop as keyof LaxiosRequestConfig] = getMergedValue(
+    } else if (config1[prop as keyof SaxiosRequestConfig] !== undefined) {
+      config[prop as keyof SaxiosRequestConfig] = getMergedValue(
         undefined, 
-        config1[prop as keyof LaxiosRequestConfig]
+        config1[prop as keyof SaxiosRequestConfig]
       );
     }
   });
 
   defaultToConfig2Keys.forEach(prop => {
-    if (config2[prop as keyof LaxiosRequestConfig] !== undefined) {
-      config[prop as keyof LaxiosRequestConfig] = config2[prop as keyof LaxiosRequestConfig];
-    } else if (config1[prop as keyof LaxiosRequestConfig] !== undefined) {
-      config[prop as keyof LaxiosRequestConfig] = config1[prop as keyof LaxiosRequestConfig];
+    if (config2[prop as keyof SaxiosRequestConfig] !== undefined) {
+      config[prop as keyof SaxiosRequestConfig] = config2[prop as keyof SaxiosRequestConfig];
+    } else if (config1[prop as keyof SaxiosRequestConfig] !== undefined) {
+      config[prop as keyof SaxiosRequestConfig] = config1[prop as keyof SaxiosRequestConfig];
     }
   });
 
   directMergeKeys.forEach(prop => {
-    if (config2[prop as keyof LaxiosRequestConfig] !== undefined) {
-      config[prop as keyof LaxiosRequestConfig] = config2[prop as keyof LaxiosRequestConfig];
-    } else if (config1[prop as keyof LaxiosRequestConfig] !== undefined) {
-      config[prop as keyof LaxiosRequestConfig] = config1[prop as keyof LaxiosRequestConfig];
+    if (config2[prop as keyof SaxiosRequestConfig] !== undefined) {
+      config[prop as keyof SaxiosRequestConfig] = config2[prop as keyof SaxiosRequestConfig];
+    } else if (config1[prop as keyof SaxiosRequestConfig] !== undefined) {
+      config[prop as keyof SaxiosRequestConfig] = config1[prop as keyof SaxiosRequestConfig];
     }
   });
 

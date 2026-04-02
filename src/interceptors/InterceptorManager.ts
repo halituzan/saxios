@@ -1,4 +1,4 @@
-import { LaxiosInterceptorManager } from '../types';
+import { SaxiosInterceptorManager } from '../types';
 
 interface InterceptorHandler<V> {
   fulfilled?: (value: V) => any;
@@ -10,7 +10,7 @@ interface InterceptorHandler<V> {
 /**
  * Interceptor Manager sınıfı
  */
-export class InterceptorManager<V> implements LaxiosInterceptorManager<V> {
+export class InterceptorManager<V> implements SaxiosInterceptorManager<V> {
   private handlers: Array<InterceptorHandler<V> | null> = [];
 
   /**

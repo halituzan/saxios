@@ -1,4 +1,4 @@
-import laxios from '../src';
+import saxios from '../src';
 import { RetryManager } from '../src/features/retry/RetryManager';
 import { DeduplicationManager } from '../src/features/deduplication/DeduplicationManager';
 import { AnalyticsManager } from '../src/features/analytics/AnalyticsManager';
@@ -7,14 +7,14 @@ import { LoggingManager } from '../src/features/logging/LoggingManager';
 // Mock fetch
 const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
 
-describe('Laxios Advanced Features', () => {
+describe('saxios Advanced Features', () => {
   beforeEach(() => {
     mockFetch.mockClear();
   });
 
   describe('Retry System', () => {
     it('should retry failed requests', async () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         features: {
           retry: {
             enabled: true,
@@ -58,7 +58,7 @@ describe('Laxios Advanced Features', () => {
 
   describe('Request Deduplication', () => {
     it('should deduplicate identical requests', async () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         features: {
           deduplication: {
             enabled: true
@@ -129,7 +129,7 @@ describe('Laxios Advanced Features', () => {
 
   describe('Security Features', () => {
     it('should create instance with security features', () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         features: {
           security: {
             enabled: true,
@@ -145,7 +145,7 @@ describe('Laxios Advanced Features', () => {
 
   describe('Offline Support', () => {
     it('should create instance with offline support', () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         features: {
           offline: {
             enabled: true,
@@ -164,7 +164,7 @@ describe('Laxios Advanced Features', () => {
 
   describe('Request Batching', () => {
     it('should create instance with batching', () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         features: {
           batching: {
             enabled: true,
@@ -222,7 +222,7 @@ describe('Laxios Advanced Features', () => {
 
   describe('Feature Integration', () => {
     it('should create instance with multiple features', () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         features: {
           retry: { enabled: true, attempts: 3 },
           deduplication: { enabled: true },
@@ -246,7 +246,7 @@ describe('Laxios Advanced Features', () => {
     });
 
     it('should update feature configurations', () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         features: {
           retry: { enabled: false }
         }
@@ -264,7 +264,7 @@ describe('Laxios Advanced Features', () => {
     });
 
     it('should enable/disable all features', () => {
-      const instance = laxios.create();
+      const instance = saxios.create();
 
       // Tüm feature'ları etkinleştir
       instance.features.enableAll();
@@ -284,7 +284,7 @@ describe('Laxios Advanced Features', () => {
 
   describe('Feature Events', () => {
     it('should handle feature events', () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         features: {
           logging: { enabled: true, logToConsole: false }
         }

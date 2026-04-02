@@ -1,5 +1,5 @@
 import { OfflineConfig, QueuedRequest } from '../types';
-import { LaxiosRequestConfig, LaxiosResponse } from '../../types';
+import { SaxiosRequestConfig, SaxiosResponse } from '../../types';
 
 /**
  * Offline Manager - Offline support ve request queue
@@ -112,9 +112,9 @@ export class OfflineManager {
    * Request'i offline durumda handle et
    */
   async handleOfflineRequest(
-    config: LaxiosRequestConfig,
-    requestFn: () => Promise<LaxiosResponse>
-  ): Promise<LaxiosResponse> {
+    config: SaxiosRequestConfig,
+    requestFn: () => Promise<SaxiosResponse>
+  ): Promise<SaxiosResponse> {
     if (!this.config.enabled) {
       return requestFn();
     }
@@ -145,7 +145,7 @@ export class OfflineManager {
   /**
    * Request'i queue'ya ekle
    */
-  private queueRequest(config: LaxiosRequestConfig): void {
+  private queueRequest(config: SaxiosRequestConfig): void {
     // Queue size kontrolü
     if (this.requestQueue.length >= this.config.maxQueueSize) {
       // En eski request'i çıkar (FIFO)
@@ -220,7 +220,7 @@ export class OfflineManager {
 
     try {
       const queueData = JSON.stringify(this.requestQueue);
-      this.storage.setItem('laxios_offline_queue', queueData);
+      this.storage.setItem('saxios_offline_queue', queueData);
     } catch (error) {
       console.warn('Failed to save offline queue:', error);
     }
@@ -233,7 +233,7 @@ export class OfflineManager {
     if (!this.storage) return;
 
     try {
-      const queueData = this.storage.getItem('laxios_offline_queue');
+      const queueData = this.storage.getItem('saxios_offline_queue');
       if (queueData) {
         this.requestQueue = JSON.parse(queueData);
       }

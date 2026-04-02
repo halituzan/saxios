@@ -40,7 +40,7 @@ export default [
     output: {
       file: 'dist/index.umd.js',
       format: 'umd',
-      name: 'Laxios',
+      name: 'saxios',
       banner,
       globals: {}
     },

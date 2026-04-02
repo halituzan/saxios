@@ -1,30 +1,30 @@
-import laxios from '../src';
+import saxios from '../src';
 import { CacheManager } from '../src/cache/CacheManager';
 import { MemoryStorage } from '../src/cache/MemoryStorage';
 
 // Mock fetch
 const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
 
-describe('Laxios Cache System', () => {
+describe('saxios Cache System', () => {
   beforeEach(() => {
     mockFetch.mockClear();
   });
 
   describe('Cache Configuration', () => {
     it('should create instance with cache disabled by default', () => {
-      const instance = laxios.create();
+      const instance = saxios.create();
       expect(instance.cache.isEnabled()).toBe(false);
     });
 
     it('should create instance with cache enabled when cache: true', () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         cache: true
       });
       expect(instance.cache.isEnabled()).toBe(true);
     });
 
     it('should create instance with custom cache config', () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         cache: {
           enabled: true,
           ttl: 60000,
@@ -40,7 +40,7 @@ describe('Laxios Cache System', () => {
 
   describe('Cache Functionality', () => {
     it('should cache GET requests when cache is enabled', async () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         cache: true
       });
 
@@ -75,7 +75,7 @@ describe('Laxios Cache System', () => {
     });
 
     it('should not cache POST requests by default', async () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         cache: true
       });
 
@@ -96,7 +96,7 @@ describe('Laxios Cache System', () => {
     });
 
     it('should respect cache TTL', async () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         cache: {
           enabled: true,
           ttl: 100 // 100ms TTL
@@ -135,7 +135,7 @@ describe('Laxios Cache System', () => {
     });
 
     it('should handle different cache keys for different URLs', async () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         cache: true
       });
 
@@ -161,7 +161,7 @@ describe('Laxios Cache System', () => {
     });
 
     it('should handle different cache keys for different params', async () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         cache: true
       });
 
@@ -197,7 +197,7 @@ describe('Laxios Cache System', () => {
     });
 
     it('should clear cache', async () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         cache: true
       });
 
@@ -222,7 +222,7 @@ describe('Laxios Cache System', () => {
     });
 
     it('should enable/disable cache dynamically', async () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         cache: true
       });
 
@@ -313,7 +313,7 @@ describe('Laxios Cache System', () => {
 
   describe('Request-level cache control', () => {
     it('should override instance cache config with request-level config', async () => {
-      const instance = laxios.create({
+      const instance = saxios.create({
         cache: false // Instance level cache disabled
       });
 

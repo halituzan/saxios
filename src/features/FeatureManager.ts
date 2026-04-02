@@ -1,5 +1,5 @@
-import { LaxiosFeaturesConfig, LaxiosEvents } from './types';
-import { LaxiosRequestConfig, LaxiosResponse } from '../types';
+import { SaxiosFeaturesConfig, SaxiosEvents } from './types';
+import { SaxiosRequestConfig, SaxiosResponse } from '../types';
 
 // Feature Managers
 import { RetryManager } from './retry/RetryManager';
@@ -14,8 +14,8 @@ import { LoggingManager } from './logging/LoggingManager';
  * Feature Manager - Tüm özellikleri yöneten ana sınıf
  */
 export class FeatureManager {
-  private config: LaxiosFeaturesConfig;
-  private eventListeners: Partial<LaxiosEvents> = {};
+  private config: SaxiosFeaturesConfig;
+  private eventListeners: Partial<SaxiosEvents> = {};
 
   // Feature Managers
   public readonly retry: RetryManager;
@@ -26,7 +26,7 @@ export class FeatureManager {
   public readonly batching: BatchingManager;
   public readonly logging: LoggingManager;
 
-  constructor(config: LaxiosFeaturesConfig = {}) {
+  constructor(config: SaxiosFeaturesConfig = {}) {
     this.config = config;
 
     // Feature manager'ları başlat
@@ -43,9 +43,9 @@ export class FeatureManager {
    * Request'i tüm feature'lardan geçir
    */
   async processRequest<T = any>(
-    config: LaxiosRequestConfig,
-    requestFn: () => Promise<LaxiosResponse<T>>
-  ): Promise<LaxiosResponse<T>> {
+    config: SaxiosRequestConfig,
+    requestFn: () => Promise<SaxiosResponse<T>>
+  ): Promise<SaxiosResponse<T>> {
     const requestId = this.logging.logRequestStart(config);
     const startTime = Date.now();
 
@@ -105,11 +105,11 @@ export class FeatureManager {
    * Request'i feature'larla execute et
    */
   private async executeWithFeatures<T>(
-    config: LaxiosRequestConfig,
-    requestFn: () => Promise<LaxiosResponse<T>>,
+    config: SaxiosRequestConfig,
+    requestFn: () => Promise<SaxiosResponse<T>>,
     dedupKey: string,
     _requestId: string
-  ): Promise<LaxiosResponse<T>> {
+  ): Promise<SaxiosResponse<T>> {
     // Offline handling
     const offlineAwareRequestFn = () => 
       this.offline.handleOfflineRequest(config, requestFn);
@@ -133,23 +133,23 @@ export class FeatureManager {
   /**
    * Event listener ekle
    */
-  on<K extends keyof LaxiosEvents>(event: K, listener: LaxiosEvents[K]): void {
+  on<K extends keyof SaxiosEvents>(event: K, listener: SaxiosEvents[K]): void {
     this.eventListeners[event] = listener;
   }
 
   /**
    * Event listener kaldır
    */
-  off<K extends keyof LaxiosEvents>(event: K): void {
+  off<K extends keyof SaxiosEvents>(event: K): void {
     delete this.eventListeners[event];
   }
 
   /**
    * Event emit et
    */
-  private emit<K extends keyof LaxiosEvents>(
+  private emit<K extends keyof SaxiosEvents>(
     event: K, 
-    ...args: Parameters<LaxiosEvents[K]>
+    ...args: Parameters<SaxiosEvents[K]>
   ): void {
     const listener = this.eventListeners[event];
     if (listener) {
@@ -203,7 +203,7 @@ export class FeatureManager {
   /**
    * Konfigürasyonu güncelle
    */
-  updateConfig(newConfig: Partial<LaxiosFeaturesConfig>): void {
+  updateConfig(newConfig: Partial<SaxiosFeaturesConfig>): void {
     Object.assign(this.config, newConfig);
 
     // Her feature'ın konfigürasyonunu güncelle

@@ -1,4 +1,4 @@
-import { LaxiosResponse, LaxiosRequestConfig } from '../types';
+import { SaxiosResponse, SaxiosRequestConfig } from '../types';
 
 /**
  * Cache storage interface
@@ -19,7 +19,7 @@ export interface CachedResponse {
   status: number;
   statusText: string;
   headers: Record<string, string>;
-  config: LaxiosRequestConfig;
+  config: SaxiosRequestConfig;
   timestamp: number;
   ttl?: number;
 }
@@ -55,7 +55,7 @@ export interface CacheConfig {
   /**
    * Cache key oluşturan fonksiyon
    */
-  keyGenerator?: (config: LaxiosRequestConfig) => string;
+  keyGenerator?: (config: SaxiosRequestConfig) => string;
   
   /**
    * Hangi HTTP metodlarının cache'leneceği
@@ -72,7 +72,7 @@ export interface CacheConfig {
   /**
    * Cache'lenecek response'ları filtreleyen fonksiyon
    */
-  filter?: (response: LaxiosResponse) => boolean;
+  filter?: (response: SaxiosResponse) => boolean;
   
   /**
    * Stale-while-revalidate stratejisi

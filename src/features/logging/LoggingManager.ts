@@ -1,5 +1,5 @@
 import { LoggingConfig } from '../types';
-import { LaxiosRequestConfig, LaxiosResponse, LaxiosError } from '../../types';
+import { SaxiosRequestConfig, SaxiosResponse, SaxiosError } from '../../types';
 
 type LogLevel = 'silent' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
 
@@ -34,7 +34,7 @@ export class LoggingManager {
   /**
    * Request başlangıcını logla
    */
-  logRequestStart(config: LaxiosRequestConfig): string {
+  logRequestStart(config: SaxiosRequestConfig): string {
     if (!this.shouldLog('debug')) return '';
 
     const requestId = this.generateRequestId();
@@ -66,8 +66,8 @@ export class LoggingManager {
    */
   logRequestEnd(
     requestId: string,
-    config: LaxiosRequestConfig,
-    response: LaxiosResponse,
+    config: SaxiosRequestConfig,
+    response: SaxiosResponse,
     duration: number
   ): void {
     if (!this.shouldLog('debug')) return;
@@ -96,8 +96,8 @@ export class LoggingManager {
    */
   logRequestError(
     requestId: string,
-    config: LaxiosRequestConfig,
-    error: LaxiosError,
+    config: SaxiosRequestConfig,
+    error: SaxiosError,
     duration?: number
   ): void {
     if (!this.shouldLog('error')) return;
@@ -124,7 +124,7 @@ export class LoggingManager {
   /**
    * Retry'ı logla
    */
-  logRetry(requestId: string, config: LaxiosRequestConfig, attemptNumber: number): void {
+  logRetry(requestId: string, config: SaxiosRequestConfig, attemptNumber: number): void {
     if (!this.shouldLog('info')) return;
 
     const logData = {
@@ -140,7 +140,7 @@ export class LoggingManager {
   /**
    * Cache hit/miss logla
    */
-  logCacheEvent(requestId: string, config: LaxiosRequestConfig, event: 'hit' | 'miss' | 'set'): void {
+  logCacheEvent(requestId: string, config: SaxiosRequestConfig, event: 'hit' | 'miss' | 'set'): void {
     if (!this.shouldLog('debug')) return;
 
     const logData = {

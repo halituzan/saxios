@@ -1,4 +1,4 @@
-import { LaxiosRequestConfig, LaxiosResponse } from '../types';
+import { SaxiosRequestConfig, SaxiosResponse } from '../types';
 import { CacheConfig, CachedResponse, CacheStorage, CacheStats, CacheEvents } from './types';
 import { MemoryStorage } from './MemoryStorage';
 
@@ -60,7 +60,7 @@ export class CacheManager {
   /**
    * Request'in cache'lenebilir olup olmadığını kontrol et
    */
-  isCacheable(config: LaxiosRequestConfig): boolean {
+  isCacheable(config: SaxiosRequestConfig): boolean {
     if (!this.config.enabled) return false;
     
     const method = (config.method || 'GET').toUpperCase();
@@ -70,7 +70,7 @@ export class CacheManager {
   /**
    * Response'un cache'lenebilir olup olmadığını kontrol et
    */
-  isCacheableResponse(response: LaxiosResponse): boolean {
+  isCacheableResponse(response: SaxiosResponse): boolean {
     if (!this.config.enabled) return false;
     
     return (
@@ -82,14 +82,14 @@ export class CacheManager {
   /**
    * Cache key oluştur
    */
-  generateKey(config: LaxiosRequestConfig): string {
+  generateKey(config: SaxiosRequestConfig): string {
     return this.config.keyGenerator(config);
   }
 
   /**
    * Default cache key generator
    */
-  private defaultKeyGenerator(config: LaxiosRequestConfig): string {
+  private defaultKeyGenerator(config: SaxiosRequestConfig): string {
     const method = (config.method || 'GET').toUpperCase();
     const url = config.url || '';
     const params = config.params ? JSON.stringify(config.params) : '';
@@ -126,7 +126,7 @@ export class CacheManager {
   /**
    * Response'u cache'e kaydet
    */
-  async set(key: string, response: LaxiosResponse, ttl?: number): Promise<void> {
+  async set(key: string, response: SaxiosResponse, ttl?: number): Promise<void> {
     if (!this.isCacheableResponse(response)) {
       return;
     }
@@ -262,7 +262,7 @@ export class CacheManager {
    */
   async getStaleWhileRevalidate(
     key: string, 
-    refreshFn: () => Promise<LaxiosResponse>
+    refreshFn: () => Promise<SaxiosResponse>
   ): Promise<CachedResponse | null> {
     const cached = await this.get(key);
     
@@ -299,7 +299,7 @@ export class CacheManager {
   /**
    * Cache warm-up (önceden cache'le)
    */
-  async warmUp(requests: Array<{ config: LaxiosRequestConfig; fetcher: () => Promise<LaxiosResponse> }>): Promise<void> {
+  async warmUp(requests: Array<{ config: SaxiosRequestConfig; fetcher: () => Promise<SaxiosResponse> }>): Promise<void> {
     const promises = requests.map(async ({ config, fetcher }) => {
       if (this.isCacheable(config)) {
         try {

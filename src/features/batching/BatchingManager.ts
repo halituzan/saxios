@@ -1,9 +1,9 @@
 import { BatchingConfig } from '../types';
-import { LaxiosRequestConfig, LaxiosResponse } from '../../types';
+import { SaxiosRequestConfig, SaxiosResponse } from '../../types';
 
 interface BatchedRequest {
-  config: LaxiosRequestConfig;
-  resolve: (response: LaxiosResponse) => void;
+  config: SaxiosRequestConfig;
+  resolve: (response: SaxiosResponse) => void;
   reject: (error: any) => void;
   timestamp: number;
 }
@@ -35,14 +35,14 @@ export class BatchingManager {
    * Request'i batch'e ekle
    */
   async batchRequest<T = any>(
-    config: LaxiosRequestConfig,
-    requestFn: () => Promise<LaxiosResponse<T>>
-  ): Promise<LaxiosResponse<T>> {
+    config: SaxiosRequestConfig,
+    requestFn: () => Promise<SaxiosResponse<T>>
+  ): Promise<SaxiosResponse<T>> {
     if (!this.config.enabled || !this.isBatchable(config)) {
       return requestFn();
     }
 
-    return new Promise<LaxiosResponse<T>>((resolve, reject) => {
+    return new Promise<SaxiosResponse<T>>((resolve, reject) => {
       const batchKey = this.config.batchKey(config);
       const batchedRequest: BatchedRequest = {
         config,
@@ -58,7 +58,7 @@ export class BatchingManager {
   /**
    * Request'in batch'lenebilir olup olmadığını kontrol et
    */
-  private isBatchable(config: LaxiosRequestConfig): boolean {
+  private isBatchable(config: SaxiosRequestConfig): boolean {
     const method = (config.method || 'GET').toUpperCase();
     
     // Sadece GET request'leri batch'lenir
@@ -141,7 +141,7 @@ export class BatchingManager {
   /**
    * Batch request oluştur
    */
-  private createBatchRequest(requests: BatchedRequest[]): LaxiosRequestConfig {
+  private createBatchRequest(requests: BatchedRequest[]): SaxiosRequestConfig {
     const batchData = {
       requests: requests.map((req, index) => ({
         id: index,
@@ -165,7 +165,7 @@ export class BatchingManager {
   /**
    * Batch request'i gönder
    */
-  private async sendBatchRequest(batchConfig: LaxiosRequestConfig): Promise<any> {
+  private async sendBatchRequest(batchConfig: SaxiosRequestConfig): Promise<any> {
     // Bu kısım gerçek implementasyonda fetch ile yapılacak
     // Şimdilik mock response döndür
     console.log('Sending batch request:', batchConfig);
@@ -192,7 +192,7 @@ export class BatchingManager {
       const response = responses[index];
       
       if (response) {
-        const laxiosResponse: LaxiosResponse = {
+        const item: SaxiosResponse = {
           data: response.data,
           status: response.status,
           statusText: response.statusText,
@@ -201,7 +201,7 @@ export class BatchingManager {
           request: null
         };
 
-        request.resolve(laxiosResponse);
+        request.resolve(item);
       } else {
         request.reject(new Error(`No response for batch request ${index}`));
       }
@@ -211,7 +211,7 @@ export class BatchingManager {
   /**
    * Default batch key generator
    */
-  private defaultBatchKey(config: LaxiosRequestConfig): string {
+  private defaultBatchKey(config: SaxiosRequestConfig): string {
     // Aynı base URL'e sahip request'leri batch'le
     const baseURL = config.baseURL || '';
     const method = (config.method || 'GET').toUpperCase();

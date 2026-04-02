@@ -1,4 +1,4 @@
-import { LaxiosRequestConfig, LaxiosResponse, LaxiosError } from '../types';
+import { SaxiosRequestConfig, SaxiosResponse, SaxiosError } from '../types';
 
 // ===== RETRY SYSTEM =====
 export interface RetryConfig {
@@ -7,14 +7,14 @@ export interface RetryConfig {
   delay?: number;
   exponentialBackoff?: boolean;
   maxDelay?: number;
-  retryCondition?: (error: LaxiosError) => boolean;
-  onRetry?: (attemptNumber: number, error: LaxiosError) => void;
+  retryCondition?: (error: SaxiosError) => boolean;
+  onRetry?: (attemptNumber: number, error: SaxiosError) => void;
 }
 
 // ===== DEDUPLICATION =====
 export interface DeduplicationConfig {
   enabled?: boolean;
-  keyGenerator?: (config: LaxiosRequestConfig) => string;
+  keyGenerator?: (config: SaxiosRequestConfig) => string;
   ttl?: number; // How long to keep deduplication cache
 }
 
@@ -27,7 +27,7 @@ export interface AnalyticsConfig {
   endpoint?: string;
   batchSize?: number;
   flushInterval?: number;
-  customMetrics?: Record<string, (config: LaxiosRequestConfig, response?: LaxiosResponse) => any>;
+  customMetrics?: Record<string, (config: SaxiosRequestConfig, response?: SaxiosResponse) => any>;
 }
 
 export interface RequestMetrics {
@@ -64,7 +64,7 @@ export interface OfflineConfig {
 }
 
 export interface QueuedRequest {
-  config: LaxiosRequestConfig;
+  config: SaxiosRequestConfig;
   timestamp: number;
   attempts: number;
 }
@@ -75,7 +75,7 @@ export interface BatchingConfig {
   maxBatchSize?: number;
   batchDelay?: number;
   batchEndpoint?: string;
-  batchKey?: (config: LaxiosRequestConfig) => string;
+  batchKey?: (config: SaxiosRequestConfig) => string;
 }
 
 // ===== GRAPHQL =====
@@ -162,7 +162,7 @@ export interface PerformanceConfig {
   enabled?: boolean;
   slowRequestThreshold?: number;
   memoryUsageTracking?: boolean;
-  onSlowRequest?: (config: LaxiosRequestConfig, duration: number) => void;
+  onSlowRequest?: (config: SaxiosRequestConfig, duration: number) => void;
   onMemoryWarning?: (usage: MemoryUsage) => void;
 }
 
@@ -179,11 +179,11 @@ export interface MiddlewareConfig {
 }
 
 export interface MiddlewareFunction {
-  (config: LaxiosRequestConfig, next: () => Promise<LaxiosResponse>): Promise<LaxiosResponse>;
+  (config: SaxiosRequestConfig, next: () => Promise<SaxiosResponse>): Promise<SaxiosResponse>;
 }
 
 // ===== MAIN FEATURES CONFIG =====
-export interface LaxiosFeaturesConfig {
+export interface SaxiosFeaturesConfig {
   retry?: RetryConfig;
   deduplication?: DeduplicationConfig;
   analytics?: AnalyticsConfig;
@@ -201,14 +201,14 @@ export interface LaxiosFeaturesConfig {
 }
 
 // ===== EVENTS =====
-export interface LaxiosEvents {
-  'request:start': (config: LaxiosRequestConfig) => void;
-  'request:end': (config: LaxiosRequestConfig, response: LaxiosResponse) => void;
-  'request:error': (config: LaxiosRequestConfig, error: LaxiosError) => void;
-  'request:retry': (config: LaxiosRequestConfig, attempt: number) => void;
-  'request:cached': (config: LaxiosRequestConfig, response: LaxiosResponse) => void;
-  'request:queued': (config: LaxiosRequestConfig) => void;
-  'batch:created': (requests: LaxiosRequestConfig[]) => void;
+export interface SaxiosEvents {
+  'request:start': (config: SaxiosRequestConfig) => void;
+  'request:end': (config: SaxiosRequestConfig, response: SaxiosResponse) => void;
+  'request:error': (config: SaxiosRequestConfig, error: SaxiosError) => void;
+  'request:retry': (config: SaxiosRequestConfig, attempt: number) => void;
+  'request:cached': (config: SaxiosRequestConfig, response: SaxiosResponse) => void;
+  'request:queued': (config: SaxiosRequestConfig) => void;
+  'batch:created': (requests: SaxiosRequestConfig[]) => void;
   'offline:detected': () => void;
   'online:detected': () => void;
 }

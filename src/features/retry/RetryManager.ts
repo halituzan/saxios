@@ -1,5 +1,5 @@
 import { RetryConfig } from '../types';
-import { LaxiosRequestConfig, LaxiosResponse, LaxiosError } from '../../types';
+import { SaxiosRequestConfig, SaxiosResponse, SaxiosError } from '../../types';
 
 /**
  * Retry Manager - Request'leri tekrar deneme sistemi
@@ -23,14 +23,14 @@ export class RetryManager {
    * Request'i retry logic ile çalıştır
    */
   async executeWithRetry<T = any>(
-    requestFn: () => Promise<LaxiosResponse<T>>,
-    _requestConfig: LaxiosRequestConfig
-  ): Promise<LaxiosResponse<T>> {
+    requestFn: () => Promise<SaxiosResponse<T>>,
+    _requestConfig: SaxiosRequestConfig
+  ): Promise<SaxiosResponse<T>> {
     if (!this.config.enabled) {
       return requestFn();
     }
 
-    let lastError: LaxiosError;
+    let lastError: SaxiosError;
     let attempt = 0;
 
     while (attempt <= this.config.attempts) {
@@ -86,7 +86,7 @@ export class RetryManager {
   /**
    * Default retry condition
    */
-  private defaultRetryCondition(error: LaxiosError): boolean {
+  private defaultRetryCondition(error: SaxiosError): boolean {
     // Network errors
     if (error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED') {
       return true;

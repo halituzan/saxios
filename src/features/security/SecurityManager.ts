@@ -1,5 +1,5 @@
 import { SecurityConfig } from '../types';
-import { LaxiosRequestConfig, LaxiosHeaders } from '../../types';
+import { SaxiosRequestConfig, SaxiosHeaders } from '../../types';
 
 /**
  * Security Manager - Güvenlik özellikleri
@@ -27,7 +27,7 @@ export class SecurityManager {
   /**
    * Request'i güvenlik kontrollerinden geçir
    */
-  async secureRequest(config: LaxiosRequestConfig): Promise<LaxiosRequestConfig> {
+  async secureRequest(config: SaxiosRequestConfig): Promise<SaxiosRequestConfig> {
     if (!this.config.enabled) return config;
 
     let securedConfig = { ...config };
@@ -61,7 +61,7 @@ export class SecurityManager {
   /**
    * Origin validation
    */
-  private validateOrigin(config: LaxiosRequestConfig): LaxiosRequestConfig {
+  private validateOrigin(config: SaxiosRequestConfig): SaxiosRequestConfig {
     if (!config.url) return config;
 
     try {
@@ -85,12 +85,12 @@ export class SecurityManager {
   /**
    * CSRF token ekle
    */
-  private addCSRFToken(config: LaxiosRequestConfig): LaxiosRequestConfig {
+  private addCSRFToken(config: SaxiosRequestConfig): SaxiosRequestConfig {
     if (!this.csrfToken) {
       this.csrfToken = this.generateCSRFToken();
     }
 
-    const headers: LaxiosHeaders = {
+    const headers: SaxiosHeaders = {
       ...config.headers,
       'X-CSRF-Token': this.csrfToken
     };
@@ -101,7 +101,7 @@ export class SecurityManager {
   /**
    * Request imzala
    */
-  private async signRequest(config: LaxiosRequestConfig): Promise<LaxiosRequestConfig> {
+  private async signRequest(config: SaxiosRequestConfig): Promise<SaxiosRequestConfig> {
     const timestamp = Date.now().toString();
     const nonce = this.generateNonce();
     
@@ -111,7 +111,7 @@ export class SecurityManager {
     // Signature hesapla (gerçek implementasyonda HMAC-SHA256 kullanılır)
     const signature = await this.calculateSignature(payload);
 
-    const headers: LaxiosHeaders = {
+    const headers: SaxiosHeaders = {
       ...config.headers,
       'X-Timestamp': timestamp,
       'X-Nonce': nonce,
@@ -124,7 +124,7 @@ export class SecurityManager {
   /**
    * Sensitive data'yı şifrele
    */
-  private encryptSensitiveData(config: LaxiosRequestConfig): LaxiosRequestConfig {
+  private encryptSensitiveData(config: SaxiosRequestConfig): SaxiosRequestConfig {
     if (!config.data || typeof config.data !== 'object') {
       return config;
     }
@@ -143,10 +143,10 @@ export class SecurityManager {
   /**
    * Header'ları sanitize et
    */
-  private sanitizeHeaders(config: LaxiosRequestConfig): LaxiosRequestConfig {
+  private sanitizeHeaders(config: SaxiosRequestConfig): SaxiosRequestConfig {
     if (!config.headers) return config;
 
-    const sanitizedHeaders: LaxiosHeaders = {};
+    const sanitizedHeaders: SaxiosHeaders = {};
 
     Object.keys(config.headers).forEach(key => {
       const lowerKey = key.toLowerCase();
@@ -215,7 +215,7 @@ export class SecurityManager {
    * Signature payload oluştur
    */
   private createSignaturePayload(
-    config: LaxiosRequestConfig, 
+    config: SaxiosRequestConfig, 
     timestamp: string, 
     nonce: string
   ): string {
@@ -246,7 +246,7 @@ export class SecurityManager {
    */
   private encrypt(data: string): string {
     // Basit XOR şifreleme (demo amaçlı)
-    const key = 'laxios-security-key';
+    const key = 'saxios-security-key';
     let encrypted = '';
     
     for (let i = 0; i < data.length; i++) {

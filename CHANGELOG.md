@@ -90,10 +90,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Migration Guide
 ```typescript
 // v1.x
-const api = laxios.create({ cache: true });
+const api = saxios.create({ cache: true });
 
 // v2.0
-const api = laxios.create({
+const api = saxios.create({
   cache: true, // Hala çalışır
   features: {  // Yeni feature sistemi
     retry: { enabled: true },
@@ -133,14 +133,14 @@ const api = laxios.create({
 ## [1.0.0] - 2026-03-31
 
 ### Added
-- 🎉 Initial release of Laxios
+- 🎉 Initial release of saxios
 - ✨ Full Axios API compatibility
 - 🔒 Complete TypeScript support with comprehensive type definitions
 - 🌐 Modern Fetch API based HTTP client
 - 🔄 Request and Response interceptors
 - ❌ Cancel token support with CancelToken and AbortSignal
 - 📊 Upload and download progress tracking
-- 🛡️ Advanced error handling with custom LaxiosError
+- 🛡️ Advanced error handling with custom SaxiosError
 - 🔧 Flexible configuration options
 - 📝 Form data utilities (toFormData, formToJSON)
 - ⚡ Lightweight and fast implementation

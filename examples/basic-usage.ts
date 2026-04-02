@@ -1,4 +1,4 @@
-import laxios from '../src';
+import saxios from '../src';
 
 // Temel kullanım örnekleri
 
@@ -6,31 +6,31 @@ async function basicExamples() {
   try {
     // GET request
     console.log('=== GET Request ===');
-    const users = await laxios.get('https://jsonplaceholder.typicode.com/users');
+    const users = await saxios.get('https://jsonplaceholder.typicode.com/users');
     console.log('Users:', users.data.slice(0, 2)); // İlk 2 kullanıcı
 
     // POST request
     console.log('\n=== POST Request ===');
-    const newPost = await laxios.post('https://jsonplaceholder.typicode.com/posts', {
-      title: 'Laxios Test Post',
-      body: 'Bu Laxios ile oluşturulmuş bir test post\'u',
+    const newPost = await saxios.post('https://jsonplaceholder.typicode.com/posts', {
+      title: 'saxios Test Post',
+      body: 'Bu saxios ile oluşturulmuş bir test post\'u',
       userId: 1
     });
     console.log('New Post:', newPost.data);
 
     // PUT request
     console.log('\n=== PUT Request ===');
-    const updatedPost = await laxios.put('https://jsonplaceholder.typicode.com/posts/1', {
+    const updatedPost = await saxios.put('https://jsonplaceholder.typicode.com/posts/1', {
       id: 1,
       title: 'Güncellenmiş Post',
-      body: 'Bu post Laxios ile güncellendi',
+      body: 'Bu post saxios ile güncellendi',
       userId: 1
     });
     console.log('Updated Post:', updatedPost.data);
 
     // DELETE request
     console.log('\n=== DELETE Request ===');
-    const deleteResponse = await laxios.delete('https://jsonplaceholder.typicode.com/posts/1');
+    const deleteResponse = await saxios.delete('https://jsonplaceholder.typicode.com/posts/1');
     console.log('Delete Response Status:', deleteResponse.status);
 
   } catch (error) {
@@ -42,12 +42,12 @@ async function basicExamples() {
 async function instanceExample() {
   console.log('\n=== Instance Example ===');
   
-  const api = laxios.create({
+  const api = saxios.create({
     baseURL: 'https://jsonplaceholder.typicode.com',
     timeout: 5000,
     headers: {
       'Content-Type': 'application/json',
-      'X-Custom-Header': 'Laxios-Example'
+      'X-Custom-Header': 'Saxios-Example'
     }
   });
 
@@ -63,7 +63,7 @@ async function instanceExample() {
 async function interceptorExample() {
   console.log('\n=== Interceptor Example ===');
   
-  const api = laxios.create({
+  const api = saxios.create({
     baseURL: 'https://jsonplaceholder.typicode.com'
   });
 
@@ -109,10 +109,10 @@ async function errorHandlingExample() {
   
   try {
     // Var olmayan endpoint
-    await laxios.get('https://jsonplaceholder.typicode.com/nonexistent');
+    await saxios.get('https://jsonplaceholder.typicode.com/nonexistent');
   } catch (error) {
-    if (laxios.isLaxiosError(error)) {
-      console.log('Laxios Error:');
+    if (saxios.isSaxiosError(error)) {
+      console.log('Saxios Error:');
       console.log('- Status:', error.response?.status);
       console.log('- Status Text:', error.response?.statusText);
       console.log('- URL:', error.config?.url);
@@ -126,7 +126,7 @@ async function errorHandlingExample() {
 async function cancelTokenExample() {
   console.log('\n=== Cancel Token Example ===');
   
-  const source = laxios.CancelToken.source();
+  const source = saxios.CancelToken.source();
   
   // 2 saniye sonra cancel et
   setTimeout(() => {
@@ -134,12 +134,12 @@ async function cancelTokenExample() {
   }, 2000);
 
   try {
-    const response = await laxios.get('https://jsonplaceholder.typicode.com/posts', {
+    const response = await saxios.get('https://jsonplaceholder.typicode.com/posts', {
       cancelToken: source.token
     });
     console.log('Response received:', response.data.length, 'posts');
   } catch (error) {
-    if (laxios.isCancel(error)) {
+    if (saxios.isCancel(error)) {
       console.log('Request cancelled:', error.message);
     } else {
       console.error('Other error:', error);
@@ -151,7 +151,7 @@ async function cancelTokenExample() {
 async function cacheExample() {
   console.log('\n=== Cache Example ===');
   
-  const api = laxios.create({
+  const api = saxios.create({
     baseURL: 'https://jsonplaceholder.typicode.com',
     cache: {
       enabled: true,
@@ -194,13 +194,13 @@ async function performanceComparison() {
   console.log('\n=== Performance Comparison ===');
   
   // Cache'siz instance
-  const noCacheApi = laxios.create({
+  const noCacheApi = saxios.create({
     baseURL: 'https://jsonplaceholder.typicode.com',
     cache: false
   });
 
   // Cache'li instance
-  const cacheApi = laxios.create({
+  const cacheApi = saxios.create({
     baseURL: 'https://jsonplaceholder.typicode.com',
     cache: true
   });
@@ -234,7 +234,7 @@ async function performanceComparison() {
 
 // Tüm örnekleri çalıştır
 async function runExamples() {
-  console.log('🚀 Laxios Examples Starting...\n');
+  console.log('🚀 Saxios Examples Starting...\n');
   
   await basicExamples();
   await instanceExample();
